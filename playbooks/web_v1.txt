@@ -1,99 +1,177 @@
-Tu génères un lab web CTF pédagogique complet depuis zéro pour Altair.
+Tu génères un lab web CTF pédagogique complet pour Altair.
 
-CONTRAINTES ALTAIR
-- Le lab doit fonctionner localement avec exactement :
+Ce playbook encadre uniquement les contraintes spécifiques aux labs web.
+Respecte la demande utilisateur quand elle est compatible avec Altair.
+En cas d’ambiguïté, choisis l’option la plus simple, sûre et cohérente.
+Ne crée jamais une incohérence technique pour satisfaire partiellement une demande.
+Si la demande contredit une contrainte Altair non négociable, retourne ERROR: <raison>.
+
+CONTRAINTES WEB ALTAIR
+
+- Le lab doit fonctionner localement avec :
   docker build -t lab .
-  docker run -p 3000:3000 lab
-- En production, Altair exécute l’image comme un Pod Kubernetes avec lab_delivery="web" et app_port=3000.
-- Un seul conteneur, pas de docker-compose, pas de service externe.
+  docker run -p <app_port>:<app_port> lab
+- Si <app_port> n’est pas fourni, utiliser 3000.
+- En production, Altair exécute l’image comme un Pod Kubernetes avec lab_delivery="web" et app_port=<app_port>.
+- Un seul conteneur.
+- Pas de service externe.
+- Pas d’internet au runtime.
 - Le runtime web Altair expose un seul port public.
-- Le lab doit écouter sur 0.0.0.0:3000.
-- Ne jamais écouter uniquement sur localhost ou 127.0.0.1.
-- Le Dockerfile est à la racine et contient EXPOSE 3000 et CMD ou ENTRYPOINT.
+- Le Dockerfile est à la racine et contient EXPOSE <app_port> et CMD ou ENTRYPOINT.
 - Le serveur web doit rester au premier plan.
-- Ne pas lancer le serveur en arrière-plan puis faire seulement tail -f /dev/null, sauf cas multi-process explicitement justifié.
 - Le conteneur ne doit pas terminer après le démarrage.
+- Interdit : privileged, hostPath, hostNetwork, hostPID, hostIPC, socket Docker.
+- Le lab doit être contenu dans le conteneur, sans attaque hors plateforme.
+
+PORT ET HOST WEB
+
+- Le port effectif est <app_port> si fourni, sinon 3000.
+- Le Dockerfile doit exposer uniquement le port effectif.
+- Le serveur web principal doit écouter sur toutes les interfaces réseau du conteneur.
+- Utiliser 0.0.0.0 par défaut.
+- Ne jamais utiliser localhost, 127.0.0.1 ou ::1 comme host d’écoute du serveur principal.
+- Attention : le host d’écoute n’est pas l’URL publique du lab. L’URL publique est gérée par Altair via le proxy.
+- Le host ne doit pas être rendu configurable par l’utilisateur, sauf besoin technique explicite validé par les contraintes Altair.
+- Tous les flux web publics doivent passer par le port effectif.
+- Ne jamais exposer plusieurs ports publics.
+- Ne jamais demander un second docker run -p.
 
 ROUTING ALTAIR / SOUS-CHEMIN
+
 - Le lab est ouvert via une URL de type /web/<container_id>/.
 - L’application doit fonctionner derrière ce sous-chemin.
-- Utiliser des chemins relatifs pour les assets et appels API.
+- Utiliser des chemins relatifs pour les assets, liens, redirections et appels API.
 - Éviter les chemins absolus comme /style.css, /script.js, /api/login, /login.
 - Préférer :
   ./style.css
   ./script.js
   ./api/login
   new URL("api/login", window.location.href)
-- Ne pas hardcoder localhost, 127.0.0.1, http://localhost:3000 ou un domaine fixe dans le frontend.
+- Ne pas hardcoder localhost, 127.0.0.1, 0.0.0.0, http://localhost:<app_port>, http://localhost:3000 ou un domaine fixe dans le frontend.
+- Le frontend ne doit jamais appeler directement un host ou port fixe.
 - Les redirections doivent rester relatives, par exemple ./dashboard au lieu de /dashboard.
 - Si l’app utilise React/Vite/SPA, configurer le build pour fonctionner en chemin relatif.
 - Si une page HTML référence des fichiers statiques, ajouter si utile :
   <base href="./">
 
 PORTS ET SERVICES INTERNES
-- Le seul port exposé par Docker doit être 3000.
-- Utiliser EXPOSE 3000.
-- Si le scénario nécessite plusieurs services internes, les faire tourner dans le même conteneur derrière un reverse proxy interne.
-- Dans ce cas, Nginx/Caddy/équivalent doit écouter sur 0.0.0.0:3000 et rester au premier plan.
-- Ne jamais demander un second docker run -p.
-- Tous les flux web doivent passer par le port 3000.
 
-FLAG
-- Le flag final est stocké dans /flag.txt dans le conteneur.
-- Format recommandé : CTF{description_courte}.
-- L’application peut lire /flag.txt côté serveur uniquement lorsque la condition de réussite est atteinte.
-- Ne jamais exposer /flag.txt en fichier statique.
+- Si le scénario nécessite plusieurs services internes, les faire tourner dans le même conteneur derrière un reverse proxy interne.
+- Dans ce cas, Nginx/Caddy/équivalent doit écouter sur 0.0.0.0:<app_port> et rester au premier plan.
+- Les services internes ne doivent pas être exposés publiquement sur d’autres ports.
+- Les ports internes, README, scripts et configuration doivent rester cohérents.
+
+FLAG WEB
+
+- Le flag final est stocké dans /flag.txt.
+- Le flag peut être créé dans le Dockerfile ou dans un script de génération si ces fichiers ne sont jamais accessibles au joueur.
+- /flag.txt ne doit jamais être servi comme fichier statique.
+- /flag.txt ne doit jamais être placé dans public/, static/, assets/, dist/ ou tout dossier exposé par le serveur web.
+- Le serveur peut lire /flag.txt uniquement côté backend.
+- Le flag doit être renvoyé seulement après validation réelle de la condition de réussite.
+- Ne jamais mettre le flag final dans le HTML, JavaScript frontend, CSS, README.md, HINTS.md, logs lisibles par le joueur ou endpoints publics non protégés.
+- Si le flag est accessible via une route, cette route doit vérifier réellement la condition de résolution côté serveur.
 
 IMAGE ET DOCKERFILE
+
 - Image recommandée selon la stack :
   - Node.js : node:20-bookworm-slim
   - Python : python:3.12-slim-bookworm
   - Debian générique : debian:bookworm-slim
 - Installer uniquement les paquets nécessaires.
 - Ne pas installer vim, nano, curl, gcc, sudo ou cron sauf nécessité réelle du challenge.
-- Tous les fichiers mentionnés par COPY, require, import, readFileSync, CMD ou ENTRYPOINT doivent exister dans la sortie finale.
+- Tous les fichiers mentionnés par COPY, require, import, readFileSync, CMD ou ENTRYPOINT doivent exister.
 - Tout script exécuté au build ou au démarrage doit être réellement appelé.
 - Si une base de données ou un artefact est généré au build, le script doit être autonome et appelé explicitement dans le Dockerfile.
 - Exemple :
   RUN node scripts/init-db.js
 - Ce script doit créer réellement le fichier attendu avant qu’il soit utilisé.
-- Aucun fichier ne dépasse 500 lignes.
 
 LANCEMENT
-- Le CMD doit lancer le serveur web au premier plan.
+
+- Le CMD doit lancer le serveur web principal au premier plan.
 - Exemples valides :
   CMD ["node", "server.js"]
   CMD ["python", "app.py"]
   CMD ["npm", "start"]
 - Pour Express :
-  app.listen(3000, "0.0.0.0")
+  app.listen(APP_PORT, "0.0.0.0")
+  avec APP_PORT égal au port effectif.
 - Pour Flask :
-  app.run(host="0.0.0.0", port=3000)
+  app.run(host="0.0.0.0", port=APP_PORT)
 - Pour FastAPI/Uvicorn :
-  uvicorn app:app --host 0.0.0.0 --port 3000
+  uvicorn app:app --host 0.0.0.0 --port <app_port>
 - Pour Vite en preview :
-  vite preview --host 0.0.0.0 --port 3000
-
-INTERDIT POUR LE WEB
+  vite preview --host 0.0.0.0 --port <app_port>
 - Ne pas utiliser CMD ["/bin/bash"] seul.
-- Ne pas utiliser un serveur qui écoute sur localhost uniquement.
-- Ne pas utiliser plusieurs ports publics.
-- Ne pas utiliser des URLs absolues cassant le sous-chemin Altair.
-- Ne pas dépendre d’internet au runtime.
-- Ne pas demander d’action manuelle après docker run.
-- Ne pas utiliser privileged, hostPath, hostNetwork, hostPID, hostIPC ou socket Docker.
+- Ne pas lancer le serveur web principal en arrière-plan puis faire seulement tail -f /dev/null.
+- Un entrypoint.sh est autorisé seulement si plusieurs processus internes sont nécessaires.
+- Si entrypoint.sh est utilisé, il doit lancer le serveur web principal au premier plan ou utiliser un superviseur minimal explicitement justifié.
 
-NIVEAUX
-- course : apprendre à utiliser un outil ou une notion.
-- guided : plusieurs flags intermédiaires + HINTS.md avec indices progressifs.
-- non guided : un seul flag final, pas de HINTS.md.
+README.md
 
-QUALITÉ PÉDAGOGIQUE
+- README.md doit expliquer :
+  - le contexte du lab ;
+  - l’objectif pédagogique ;
+  - les premières pistes ;
+  - les contraintes utiles ;
+  - le résultat attendu sans révéler le flag.
+- README.md ne doit pas révéler le flag final ni donner toute la solution.
+- README.md ne doit pas demander Docker, Kubernetes, l’hôte, internet ou un service externe.
+- README.md ne doit mentionner que des routes, comptes, endpoints, pages et fonctionnalités réellement présents dans l’application.
+- Si README.md mentionne un identifiant de test, cet identifiant doit exister réellement.
+- Si README.md mentionne une base de données, elle doit être créée réellement au build ou au démarrage.
+- Si README.md mentionne une route ./api/..., cette route doit exister côté serveur.
+- Si README.md mentionne une vulnérabilité, elle doit être réellement exploitable dans l’application.
+
+VULNÉRABILITÉ / SÉCURITÉ
+
 - Vulnérabilité réaliste et représentative d’un environnement réel.
 - Application crédible, pas un simple stub.
 - Messages et pages visibles en <language> si fourni, sinon français.
-- README.md clair obligatoire.
 - Challenge résolvable uniquement via l’application web et les indices prévus.
-- Le lab doit être contenu dans le conteneur, sans attaque hors plateforme.
+- Ne pas annoncer une faille SQLi, XSS, IDOR, upload, JWT ou auth bypass si le code ne l’implémente pas réellement.
+- Pas de malware réel.
+- Pas de fuite de secrets réels.
+- Pas d’attaque hors conteneur.
+- Pas de dépendance à un service externe.
+- Ne pas créer de payload destructeur.
 
+COHÉRENCE À RESPECTER
 
+- Ne pas recopier une incohérence du lab original.
+- Ne pas compenser une incohérence technique par une phrase dans README.md.
+- Chaque route annoncée doit réellement exister.
+- Chaque endpoint annoncé doit réellement exister.
+- Chaque compte annoncé doit réellement exister.
+- Chaque vulnérabilité annoncée doit réellement être implémentée.
+- Chaque fichier référencé doit exister.
+- Le port du README, du Dockerfile, du serveur et des scripts doit être le même port effectif.
+- Le frontend doit fonctionner derrière /web/<container_id>/ sans URL absolue.
+
+AUTO-VÉRIFICATION STATIQUE WEB
+
+Avant de répondre, vérifier statiquement les fichiers générés.
+Ne pas prétendre avoir exécuté docker build, docker run ou les commandes.
+
+Vérifier :
+- Le port effectif est <app_port> si fourni, sinon 3000.
+- Dockerfile expose uniquement le port effectif.
+- Le serveur écoute sur 0.0.0.0:<port effectif>.
+- Le serveur principal reste au premier plan.
+- Aucun second port public n’est exposé.
+- Aucun second docker run -p n’est demandé.
+- Aucun service externe n’est requis au runtime.
+- Les assets frontend utilisent des chemins relatifs.
+- Les appels API frontend utilisent des chemins relatifs.
+- Les redirections frontend restent relatives.
+- Aucun localhost, 127.0.0.1, domaine fixe ou URL absolue n’est hardcodé côté frontend.
+- Tous les fichiers mentionnés par COPY, import, require, readFileSync ou scripts existent.
+- Les scripts de build/init réellement nécessaires sont appelés.
+- Si une base de données locale est utilisée, elle est initialisée réellement.
+- README.md ne mentionne pas de route, compte, outil, port ou endpoint absent.
+- /flag.txt n’est pas exposé en statique.
+- Le flag n’est pas en clair dans les fichiers visibles côté client.
+- La condition de réussite est réellement vérifiée côté serveur.
+- La vulnérabilité annoncée est réellement présente et contenue dans le conteneur.
+- Le lab respecte la demande utilisateur sans créer d’incohérence.

@@ -170,6 +170,22 @@ impl LlmClient {
         }
     }
 
+    pub async fn generate_lab_files_with_preferred_provider(
+        &self,
+        input: &LabGenerationInput,
+        preferred_provider: &str,
+    ) -> Result<LabGenerationOutput, LlmError> {
+        match self {
+            Self::Anthropic(service) => service.generate_lab_files(input).await,
+            Self::Gemini(service) => service.generate_lab_files(input).await,
+            Self::GeminiWithClaudeFallback(service) => {
+                service
+                    .generate_lab_files_with_preferred_provider(input, preferred_provider)
+                    .await
+            }
+        }
+    }
+
     #[allow(dead_code)]
     pub async fn advise(&self, prompt: &str) -> anyhow::Result<String> {
         match self {

@@ -555,14 +555,18 @@ impl RunProcessor {
                     &failure_message,
                 );
 
+                let repair_provider = model_output.provider.clone();
                 model_output = self
                     .llm
-                    .generate_lab_files(&LabGenerationInput {
-                        run_id: request_id,
-                        mode: mode.clone(),
-                        system: system_layer.clone(),
-                        user_message: user_payload.clone(),
-                    })
+                    .generate_lab_files_with_preferred_provider(
+                        &LabGenerationInput {
+                            run_id: request_id,
+                            mode: mode.clone(),
+                            system: system_layer.clone(),
+                            user_message: user_payload.clone(),
+                        },
+                        repair_provider.as_str(),
+                    )
                     .await
                     .map_err(|e| map_llm_error("MODEL_CALL_FAILED", e))?;
                 used_model_fallback |= model_output.used_fallback;
@@ -701,14 +705,18 @@ impl RunProcessor {
                 &validation_error,
             );
 
+            let repair_provider = model_output.provider.clone();
             model_output = self
                 .llm
-                .generate_lab_files(&LabGenerationInput {
-                    run_id: request_id,
-                    mode: mode.clone(),
-                    system: system_layer.clone(),
-                    user_message: user_payload.clone(),
-                })
+                .generate_lab_files_with_preferred_provider(
+                    &LabGenerationInput {
+                        run_id: request_id,
+                        mode: mode.clone(),
+                        system: system_layer.clone(),
+                        user_message: user_payload.clone(),
+                    },
+                    repair_provider.as_str(),
+                )
                 .await
                 .map_err(|e| map_llm_error("MODEL_CALL_FAILED", e))?;
             used_model_fallback |= model_output.used_fallback;

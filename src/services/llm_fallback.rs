@@ -121,6 +121,26 @@ impl FallbackLlmClient {
             }
         }
 
+        self.generate_lab_files_with_claude(input, true).await
+    }
+
+    pub async fn generate_lab_files_with_preferred_provider(
+        &self,
+        input: &LabGenerationInput,
+        preferred_provider: &str,
+    ) -> Result<LabGenerationOutput, LlmError> {
+        if is_anthropic_provider(preferred_provider) {
+            return self.generate_lab_files_with_claude(input, true).await;
+        }
+
+        self.generate_lab_files(input).await
+    }
+
+    async fn generate_lab_files_with_claude(
+        &self,
+        input: &LabGenerationInput,
+        mark_used_fallback: bool,
+    ) -> Result<LabGenerationOutput, LlmError> {
         for attempt in 1..=self.config.claude_max_attempts {
             let started = Instant::now();
             let result = self
@@ -130,7 +150,7 @@ impl FallbackLlmClient {
 
             match result {
                 Ok(mut output) => {
-                    output.used_fallback = true;
+                    output.used_fallback = mark_used_fallback;
                     log_llm_attempt_success(
                         "anthropic",
                         attempt,
@@ -241,19 +261,80 @@ impl FallbackLlmClient {
     }
 }
 
+
+fn is_anthropic_provider(provider: &str) -> bool {
+    provider.eq_ignore_ascii_case("anthropic") || provider.eq_ignore_ascii_case("claude")
+}
+
 pub fn is_gemini_overloaded_error(error: &LlmError) -> bool {
-    if matches!(error.status, Some(429 | 503)) {
-        return true;
+    // Fallback must stay selective: Claude is only used for temporary Gemini/provider failures.
+    // Do not fallback for prompt, auth, payload, parsing or policy errors, otherwise Claude would
+    // hide real bugs in our backend/prompt/schema instead of revealing them.
+    if matches!(
+        error.kind,
+        LlmErrorKind::PromptTooLarge
+            | LlmErrorKind::InvalidRequest
+            | LlmErrorKind::Unauthorized
+            | LlmErrorKind::Forbidden
+            | LlmErrorKind::Unprocessable
+            | LlmErrorKind::Decode
+            | LlmErrorKind::EmptyResponse
+    ) {
+        return false;
     }
 
     let message = error.message.to_ascii_lowercase();
+
+    if [
+        "gemini_api_key is not configured",
+        "api key is not configured",
+        "invalid json",
+        "schema validation failed",
+        "safety refusal",
+    ]
+    .iter()
+    .any(|needle| message.contains(needle))
+    {
+        return false;
+    }
+
+    // Provider-side temporary HTTP failures. This is not systematic fallback: 4xx request/auth
+    // errors remain excluded above and by status filtering.
+    if matches!(error.status, Some(429 | 500 | 502 | 503 | 504)) {
+        return true;
+    }
+
+    // Provider-side temporary categories when the HTTP status is unavailable.
+    if matches!(error.kind, LlmErrorKind::RateLimited | LlmErrorKind::ServerError) {
+        return true;
+    }
+
+    // HTTP status 0 in the logs comes from client-side timeout/no response. Allow fallback only
+    // when the error clearly comes from the Gemini request path after retries, not for every
+    // transport-like issue.
+    if matches!(error.kind, LlmErrorKind::ModelUnavailable | LlmErrorKind::TemporarilyUnavailable)
+        && [
+            "gemini request timeout after retries",
+            "gemini transport error after retries",
+            "total timeout reached",
+            "deadline exceeded",
+        ]
+        .iter()
+        .any(|needle| message.contains(needle))
+    {
+        return true;
+    }
+
+    // Gemini overload wording returned by the provider.
     [
         "resource_exhausted",
         "service unavailable",
         "model overloaded",
         "provider overloaded",
         "overloaded",
+        "high demand",
         "please try again later",
+        "temporarily unavailable",
     ]
     .iter()
     .any(|needle| message.contains(needle))
