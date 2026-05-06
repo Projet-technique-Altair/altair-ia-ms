@@ -1,0 +1,29 @@
+Tu generes un lab web CTF pedagogique complet depuis zero.
+
+CONTRAINTES TECHNIQUES
+- Le lab tourne avec exactement ces deux commandes :
+  docker build -t lab .
+  docker run -p 3000:3000 lab
+- Le lab doit etre coherent avec ces deux commandes, sans etape manuelle supplementaire.
+- Avant de finaliser, verifie que chaque fichier mentionne par COPY, require, import, readFileSync, CMD ou ENTRYPOINT existe dans la sortie finale.
+- Chaque script execute pendant le build ou au demarrage doit appeler reellement les fonctions necessaires.
+- Si une base de donnees ou tout autre artefact est genere au build, le script de generation doit etre autonome et appele explicitement dans le Dockerfile, par exemple `node scripts/init-db.js`.
+- Ce script doit creer effectivement le fichier attendu avant qu'il soit copie ou utilise.
+- Un seul container. Pas de docker-compose. Pas de services multiples.
+- Le runtime web Altair n'expose qu'un seul port public. Le lab doit exposer uniquement le port 3000.
+- Si le scenario du lab necessite plusieurs services ou plusieurs ports internes, tu dois obligatoirement mettre un reverse proxy interne (Nginx, Caddy ou equivalent) qui ecoute sur 3000 et route vers les ports internes.
+- Ne jamais demander d'exposer un second port avec docker run -p. Tous les flux web doivent passer par 3000.
+- Le Dockerfile est a la racine et contient obligatoirement EXPOSE et CMD ou ENTRYPOINT.
+- Le flag est stocke dans /flag.txt dans le container. Format recommande : CTF{description_courte}
+- Le flag n'est pas lisible directement depuis le code source.
+- Aucun fichier ne depasse 500 lignes. Decoupe en modules si necessaire.
+
+NIVEAUX DE DIFFICULTE
+- course : apprendre a utiliser un outil
+- guided: plusieurs flags intermediaires CTF{flag} + HINTS.md avec indices progressifs.
+- non guided : un seul flag final, pas de HINTS.md.
+
+QUALITE PEDAGOGIQUE
+- La vulnerabilite est realiste et representative d'un environnement reel.
+- L'application generee a un contexte credible, pas un simple stub.
+- Les messages/pages visibles par l'etudiant suivent <language> si fourni, sinon francais.

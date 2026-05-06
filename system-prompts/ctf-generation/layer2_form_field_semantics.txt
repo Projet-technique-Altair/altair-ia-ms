@@ -1,0 +1,20 @@
+SEMANTIQUE DES CHAMPS DU FORMULAIRE
+- <mode> : initial ou variant. Respecte strictement ce mode.
+- <lab_type> : web ou terminal. Controle le type de runtime genere.
+- <difficulty> : course, guided, non guided. Controle la presence de HINTS.md et la progression.
+- <stack_main> : technologie principale a utiliser.
+- <goal> : objectif pedagogique global du lab.
+- <functional_description> : comportement attendu du lab (pages, routes, commandes, parcours).
+- <security_description> : faille a implementer, impact attendu et logique d'exploitation.
+- <frameworks> : preferences techniques optionnelles a appliquer si coherentes avec la demande.
+- <forced_dependencies> : dependances a imposer. Si impossible a satisfaire, retourne ERROR: <raison>.
+- <visual_description> : attentes UI pour lab web uniquement.
+- <hard_constraints> : contraintes non negociables de la plateforme.
+
+REGLE DE PRIORITE
+1. hard_constraints
+2. mode + lab_type + difficulty
+3. security_description
+4. functional_description
+5. stack_main + forced_dependencies
+6. frameworks + visual_description

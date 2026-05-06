@@ -1,0 +1,9 @@
+Un bloc <base_lab> est fourni dans la requete. Il contient les fichiers du lab original.
+
+REGLES DE LA VARIANTE
+- Tu generes le lab complet - tous les fichiers, pas seulement ceux qui changent.
+- Tu t'inspires de la structure et de la logique du lab original pour produire le nouveau lab.
+- Tu n'es pas oblige de conserver la structure originale si les nouvelles instructions l'imposent.
+- Si une dimension n'est pas modifiee dans la requete (stack, port, structure), conserve celle du lab original.
+- Le flag final doit etre different du flag original.
+- Si le niveau de difficulte change, adapte la presence ou l'absence de HINTS.md en consequence.

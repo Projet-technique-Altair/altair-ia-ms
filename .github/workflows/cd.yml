@@ -1,0 +1,38 @@
+name: IA MS CD
+
+on:
+  workflow_run:
+    workflows: ["IA MS CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Tag de l'image a redeployer manuellement (sha ou vN)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    uses: Projet-technique-Altair/altair-ci/.github/workflows/microservices-cd.yml@main
+    with:
+      gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
+      region: ${{ vars.GCP_REGION }}
+      artifact_registry_host: ${{ vars.GCP_ARTIFACT_REGISTRY_HOST }}
+      artifact_registry_repo: ${{ vars.GCP_ARTIFACT_REPO }}
+      workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+      deploy_service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      service_name: altair-ia-ms
+      image_name: altair-ia-ms
+      image_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || '' }}
+
+      cloud_run_service_account: ${{ vars.CLOUD_RUN_SERVICE_ACCOUNT }}
+      cloud_run_env_vars: ${{ vars.CLOUD_RUN_ENV_VARS }}
+      cloud_run_secrets: ${{ vars.CLOUD_RUN_SECRETS }}
+      extra_deploy_args: ${{ vars.CLOUD_RUN_EXTRA_ARGS }}

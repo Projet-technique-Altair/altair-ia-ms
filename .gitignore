@@ -1,0 +1,30 @@
+/target
+/.local-storage
+/migrations/
+
+# environment files and secrets
+.env*
+.secrets/
+secrets/
+credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*credential*.json
+*service-account*.json
+*secret*.json
+*token*.json
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.backup
+backup*.sql
+
+# editor/system noise
+.DS_Store
+*.swp
+*.swo
+*.log

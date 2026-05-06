@@ -1,0 +1,99 @@
+Tu génères un lab web CTF pédagogique complet depuis zéro pour Altair.
+
+CONTRAINTES ALTAIR
+- Le lab doit fonctionner localement avec exactement :
+  docker build -t lab .
+  docker run -p 3000:3000 lab
+- En production, Altair exécute l’image comme un Pod Kubernetes avec lab_delivery="web" et app_port=3000.
+- Un seul conteneur, pas de docker-compose, pas de service externe.
+- Le runtime web Altair expose un seul port public.
+- Le lab doit écouter sur 0.0.0.0:3000.
+- Ne jamais écouter uniquement sur localhost ou 127.0.0.1.
+- Le Dockerfile est à la racine et contient EXPOSE 3000 et CMD ou ENTRYPOINT.
+- Le serveur web doit rester au premier plan.
+- Ne pas lancer le serveur en arrière-plan puis faire seulement tail -f /dev/null, sauf cas multi-process explicitement justifié.
+- Le conteneur ne doit pas terminer après le démarrage.
+
+ROUTING ALTAIR / SOUS-CHEMIN
+- Le lab est ouvert via une URL de type /web/<container_id>/.
+- L’application doit fonctionner derrière ce sous-chemin.
+- Utiliser des chemins relatifs pour les assets et appels API.
+- Éviter les chemins absolus comme /style.css, /script.js, /api/login, /login.
+- Préférer :
+  ./style.css
+  ./script.js
+  ./api/login
+  new URL("api/login", window.location.href)
+- Ne pas hardcoder localhost, 127.0.0.1, http://localhost:3000 ou un domaine fixe dans le frontend.
+- Les redirections doivent rester relatives, par exemple ./dashboard au lieu de /dashboard.
+- Si l’app utilise React/Vite/SPA, configurer le build pour fonctionner en chemin relatif.
+- Si une page HTML référence des fichiers statiques, ajouter si utile :
+  <base href="./">
+
+PORTS ET SERVICES INTERNES
+- Le seul port exposé par Docker doit être 3000.
+- Utiliser EXPOSE 3000.
+- Si le scénario nécessite plusieurs services internes, les faire tourner dans le même conteneur derrière un reverse proxy interne.
+- Dans ce cas, Nginx/Caddy/équivalent doit écouter sur 0.0.0.0:3000 et rester au premier plan.
+- Ne jamais demander un second docker run -p.
+- Tous les flux web doivent passer par le port 3000.
+
+FLAG
+- Le flag final est stocké dans /flag.txt dans le conteneur.
+- Format recommandé : CTF{description_courte}.
+- L’application peut lire /flag.txt côté serveur uniquement lorsque la condition de réussite est atteinte.
+- Ne jamais exposer /flag.txt en fichier statique.
+
+IMAGE ET DOCKERFILE
+- Image recommandée selon la stack :
+  - Node.js : node:20-bookworm-slim
+  - Python : python:3.12-slim-bookworm
+  - Debian générique : debian:bookworm-slim
+- Installer uniquement les paquets nécessaires.
+- Ne pas installer vim, nano, curl, gcc, sudo ou cron sauf nécessité réelle du challenge.
+- Tous les fichiers mentionnés par COPY, require, import, readFileSync, CMD ou ENTRYPOINT doivent exister dans la sortie finale.
+- Tout script exécuté au build ou au démarrage doit être réellement appelé.
+- Si une base de données ou un artefact est généré au build, le script doit être autonome et appelé explicitement dans le Dockerfile.
+- Exemple :
+  RUN node scripts/init-db.js
+- Ce script doit créer réellement le fichier attendu avant qu’il soit utilisé.
+- Aucun fichier ne dépasse 500 lignes.
+
+LANCEMENT
+- Le CMD doit lancer le serveur web au premier plan.
+- Exemples valides :
+  CMD ["node", "server.js"]
+  CMD ["python", "app.py"]
+  CMD ["npm", "start"]
+- Pour Express :
+  app.listen(3000, "0.0.0.0")
+- Pour Flask :
+  app.run(host="0.0.0.0", port=3000)
+- Pour FastAPI/Uvicorn :
+  uvicorn app:app --host 0.0.0.0 --port 3000
+- Pour Vite en preview :
+  vite preview --host 0.0.0.0 --port 3000
+
+INTERDIT POUR LE WEB
+- Ne pas utiliser CMD ["/bin/bash"] seul.
+- Ne pas utiliser un serveur qui écoute sur localhost uniquement.
+- Ne pas utiliser plusieurs ports publics.
+- Ne pas utiliser des URLs absolues cassant le sous-chemin Altair.
+- Ne pas dépendre d’internet au runtime.
+- Ne pas demander d’action manuelle après docker run.
+- Ne pas utiliser privileged, hostPath, hostNetwork, hostPID, hostIPC ou socket Docker.
+
+NIVEAUX
+- course : apprendre à utiliser un outil ou une notion.
+- guided : plusieurs flags intermédiaires + HINTS.md avec indices progressifs.
+- non guided : un seul flag final, pas de HINTS.md.
+
+QUALITÉ PÉDAGOGIQUE
+- Vulnérabilité réaliste et représentative d’un environnement réel.
+- Application crédible, pas un simple stub.
+- Messages et pages visibles en <language> si fourni, sinon français.
+- README.md clair obligatoire.
+- Challenge résolvable uniquement via l’application web et les indices prévus.
+- Le lab doit être contenu dans le conteneur, sans attaque hors plateforme.
+
+

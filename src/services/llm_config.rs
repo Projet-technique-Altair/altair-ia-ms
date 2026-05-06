@@ -1,0 +1,20 @@
+pub const ANTHROPIC_DEFAULT_MODEL: &str = "claude-sonnet-4-6";
+pub const GEMINI_DEFAULT_MODEL: &str = "gemini-3.1-pro-preview";
+
+pub const MAX_INPUT_TOKENS: u64 = 180_000;
+pub const MAX_OUTPUT_TOKENS: u32 = 16_000;
+pub const TOKEN_BUDGET_WARNING: u64 = 150_000;
+
+pub const RETRY_MAX_ATTEMPTS: u8 = 2;
+pub const RETRY_BACKOFF_SECONDS: [u64; 2] = [2, 4];
+pub const RETRY_ON_HTTP_STATUS: [u16; 3] = [429, 500, 529];
+pub const NO_RETRY_ON_HTTP_STATUS: [u16; 4] = [400, 401, 403, 422];
+pub const PER_ATTEMPT_TIMEOUT_SECONDS: u64 = 60;
+pub const TOTAL_TIMEOUT_SECONDS: u64 = 600;
+
+pub const MODEL_UNAVAILABLE_RETRY_AFTER_SECONDS: u64 = 300;
+pub const MAX_REQUEUE_CYCLES: u8 = 3;
+
+pub const GEMINI_MAX_ATTEMPTS_DEFAULT: u8 = 2;
+pub const CLAUDE_MAX_ATTEMPTS_DEFAULT: u8 = 2;
+pub const LLM_ATTEMPT_TIMEOUT_SECONDS_DEFAULT: u64 = 60;

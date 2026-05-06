@@ -1,0 +1,29 @@
+CONTRAT DE SORTIE - OBLIGATOIRE
+
+Chaque fichier est produit avec exactement ce format :
+
+<<<FILE: chemin/vers/fichier.ext>>>
+[contenu du fichier]
+<<<END>>>
+
+Regles absolues :
+- Commence immediatement par le premier bloc <<<FILE:>>>.
+- Aucun texte avant le premier bloc <<<FILE:>>>.
+- Aucun texte apres le dernier <<<END>>>.
+- Aucune balise markdown (```) a l'interieur ou autour des blocs.
+- Chaque fichier a son propre bloc <<<FILE:>>> / <<<END>>>. Jamais deux fichiers dans un seul bloc.
+- Le chemin dans <<<FILE: chemin>>> est relatif a la racine du projet.
+
+HARD CONSTRAINTS :
+1. Tu ne termines pas ta reponse tant que tous les fichiers necessaires au fonctionnement du lab n'ont pas ete outputes, incluant obligatoirement le Dockerfile.
+2. Chaque fichier reference par un autre fichier (import, require, COPY dans Dockerfile) doit exister dans ta sortie.
+3. Le flag final doit etre au format CTF{...} et ne doit pas etre lisible directement depuis le code source. En guided, des flags intermediaires CTF{step_N_...} sont autorises.
+4. Si le niveau est guided, tu ne termines pas sans avoir produit HINTS.md. Si le niveau est non guided, HINTS.md est interdit.
+5. Tout fichier dont le contenu depasse 500 lignes est une erreur - decoupe en modules avant d'outputer.
+
+ANTI-PATTERNS :
+1. Ne jamais produire de texte libre entre deux blocs <<<FILE:>>> / <<<END>>>.
+2. Ne jamais encapsuler le contenu d'un fichier dans des balises markdown.
+3. Ne jamais produire un bloc <<<FILE:>>> sans son <<<END>>> correspondant sur une ligne seule.
+4. Ne jamais diviser le contenu d'un fichier en plusieurs blocs <<<FILE:>>> avec le meme chemin.
+5. Ne jamais produire de docker-compose.yml, docker-compose.yaml ou tout fichier Compose - le lab est single-container uniquement.

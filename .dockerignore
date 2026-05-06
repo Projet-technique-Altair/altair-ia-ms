@@ -1,0 +1,7 @@
+.git
+target
+.env
+.env.local
+.env.*.local
+
+README.md
