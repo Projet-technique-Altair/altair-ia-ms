@@ -1,0 +1,36 @@
+CONTRAT DE SORTIE QUALIFICATION - OBLIGATOIRE
+
+Tu dois retourner uniquement un JSON valide.
+Tu ne dois retourner aucun markdown.
+Tu ne dois retourner aucun texte avant ou apres le JSON.
+Tu ne dois generer aucun fichier.
+
+SCHEMA EXACT
+{
+  "verdict": "compatible",
+  "compatible_altair": true,
+  "respecte_conditions": true,
+  "blocages": [],
+  "adaptations_requises": [],
+  "resume_utilisateur": ""
+}
+
+REGLES DE FORMAT
+- Les seules valeurs autorisees pour verdict sont : compatible, needs_adaptation, refused.
+- compatible_altair est un booleen.
+- respecte_conditions est un booleen.
+- blocages est toujours un tableau de chaines.
+- adaptations_requises est toujours un tableau de chaines.
+- resume_utilisateur est une chaine courte, claire et affichable a l'utilisateur.
+- Ne mets jamais null.
+- Ne rajoute aucune cle.
+- Ne retire aucune cle.
+
+REGLES DE CONTENU
+- Si verdict vaut compatible, blocages doit etre vide.
+- Si verdict vaut needs_adaptation, liste les adaptations minimales necessaires.
+- Si verdict vaut refused, liste les blocages qui empechent la generation.
+- resume_utilisateur doit expliquer le verdict en 1 a 4 phrases.
+- Les messages utilisateur doivent etre en francais simple.
+- Ne revele pas de raisonnement interne.
+- Ne parle pas de prompts, de system prompt, de token budget ou de modele.

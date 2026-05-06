@@ -8,10 +8,14 @@ Current files:
 - `ctf-generation/variant_playbook_append.txt`: extra rules applied in variant mode.
 - `ctf-generation/playbooks/web_v1.txt`: web playbook.
 - `ctf-generation/playbooks/terminal_v1.txt`: terminal playbook.
+- `ctf-generation/qualification/qualification_web_v1.txt`: lightweight web qualification playbook.
+- `ctf-generation/qualification/qualification_terminal_v1.txt`: lightweight terminal qualification playbook.
+- `ctf-generation/qualification/qualification_output_contract_v1.txt`: strict JSON qualification output contract.
 
 Notes:
-- `src/services/prompts/mod.rs` now loads these files at runtime.
+- `src/services/prompts/mod.rs` loads generation prompt assets at runtime.
 - Legacy `playbooks/*.txt` are still accepted as fallback paths for backward compatibility.
+- Qualification prompts are intentionally separate from generation prompts so the phase 1 feasibility gate can run with a smaller context.
 
 Versioning rule:
 - update prompt files with explicit commits;
