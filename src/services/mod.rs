@@ -7,6 +7,7 @@ pub mod llm_fallback;
 mod llm_http;
 pub mod oidc;
 pub mod prompts;
+pub mod qualification;
 pub mod run_processor;
 mod run_processor_support;
 pub mod storage;

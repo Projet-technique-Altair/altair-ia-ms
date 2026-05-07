@@ -107,6 +107,16 @@ pub struct ExecuteResponse {
     pub summary: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct QualificationResponse {
+    pub verdict: String,
+    pub compatible_altair: bool,
+    pub respecte_conditions: bool,
+    pub blocages: Vec<String>,
+    pub adaptations_requises: Vec<String>,
+    pub resume_utilisateur: String,
+}
+
 #[derive(Debug, Serialize)]
 pub struct RunStatusResponse {
     pub request_id: String,

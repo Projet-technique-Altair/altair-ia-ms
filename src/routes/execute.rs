@@ -8,7 +8,13 @@ use crate::{
         api::{ApiResponse, ExecuteResponse, ExecuteStructuredRequest},
         run::RunMode,
     },
-    services::structured_form::normalize_structured_execution,
+    services::{
+        qualification::{
+            build_qualification_base_lab_block, qualification_allows_generation,
+            qualify_lab_request, QualificationInput,
+        },
+        structured_form::normalize_structured_execution,
+    },
     state::AppState,
 };
 
@@ -36,6 +42,32 @@ pub async fn execute_structured_run(
     let source_objects =
         resolve_structured_source_objects(&state, &auth.user_id, requested_run_id, normalized.mode)
             .await?;
+    let base_lab_block = if source_objects.is_empty() {
+        None
+    } else {
+        let run_id = requested_run_id.expect("variant source resolution requires request_id");
+        build_qualification_base_lab_block(&state.storage, &run_id.to_string(), &source_objects)
+            .await?
+    };
+
+    let qualification_request_id = requested_run_id.unwrap_or_else(Uuid::new_v4);
+    let qualification = qualify_lab_request(
+        &state.llm,
+        QualificationInput {
+            request_id: qualification_request_id,
+            lab_type: normalized.lab_type,
+            lab_request_xml: &normalized.prompt,
+            base_lab_block: base_lab_block.as_deref(),
+        },
+    )
+    .await?;
+
+    if !qualification_allows_generation(&qualification) {
+        return Err(AppError::BadRequest(format!(
+            "lab qualification blocked generation: verdict={}, summary={}",
+            qualification.verdict, qualification.resume_utilisateur
+        )));
+    }
 
     let source_objects_for_consume = if source_objects.is_empty() {
         None

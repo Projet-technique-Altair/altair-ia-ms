@@ -12,6 +12,7 @@ pub mod execute;
 pub mod health;
 pub mod internal;
 pub mod local_storage;
+pub mod qualification;
 pub mod runs;
 pub mod uploads;
 
@@ -25,6 +26,10 @@ pub fn init_routes() -> Router<AppState> {
         .route(
             "/api/ia/labs/execute/structured",
             post(execute::execute_structured_run),
+        )
+        .route(
+            "/api/ia/labs/qualify/structured",
+            post(qualification::qualify_structured_lab),
         )
         .route("/api/ia/labs/runs/{id}", get(runs::get_run_status))
         .route(

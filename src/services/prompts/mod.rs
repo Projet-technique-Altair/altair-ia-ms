@@ -11,6 +11,11 @@ pub struct PromptBundle {
     pub layer2_chars: usize,
 }
 
+pub struct QualificationPromptBundle {
+    pub system: String,
+    pub playbook_chars: usize,
+}
+
 const LAYER1_BASE_SYSTEM_PATH: &str = "system-prompts/ctf-generation/layer1_base_system.txt";
 const LAYER2_FORM_FIELD_SEMANTICS_PATH: &str =
     "system-prompts/ctf-generation/layer2_form_field_semantics.txt";
@@ -24,6 +29,12 @@ const PLAYBOOK_TERMINAL_PRIMARY_PATH: &str =
     "system-prompts/ctf-generation/playbooks/terminal_v1.txt";
 const PLAYBOOK_WEB_LEGACY_PATH: &str = "playbooks/web_v1.txt";
 const PLAYBOOK_TERMINAL_LEGACY_PATH: &str = "playbooks/terminal_v1.txt";
+const QUALIFICATION_WEB_PATH: &str =
+    "system-prompts/ctf-generation/qualification/qualification_web_v1.txt";
+const QUALIFICATION_TERMINAL_PATH: &str =
+    "system-prompts/ctf-generation/qualification/qualification_terminal_v1.txt";
+const QUALIFICATION_OUTPUT_CONTRACT_PATH: &str =
+    "system-prompts/ctf-generation/qualification/qualification_output_contract_v1.txt";
 
 pub fn build_system_prompt(
     lab_type: PromptLabType,
@@ -50,6 +61,19 @@ pub fn build_system_prompt(
     })
 }
 
+pub fn build_qualification_prompt(
+    lab_type: PromptLabType,
+) -> std::io::Result<QualificationPromptBundle> {
+    let playbook = load_qualification_playbook(lab_type)?;
+    let output_contract = load_required_asset(QUALIFICATION_OUTPUT_CONTRACT_PATH)?;
+    let system = format!("{}\n\n{}", playbook, output_contract);
+
+    Ok(QualificationPromptBundle {
+        playbook_chars: playbook.chars().count(),
+        system,
+    })
+}
+
 fn load_playbook(lab_type: PromptLabType) -> std::io::Result<String> {
     let relatives = match lab_type {
         // Primary path is the new dedicated prompt directory.
@@ -62,6 +86,15 @@ fn load_playbook(lab_type: PromptLabType) -> std::io::Result<String> {
     };
 
     load_first_existing_asset(relatives)
+}
+
+fn load_qualification_playbook(lab_type: PromptLabType) -> std::io::Result<String> {
+    let relative = match lab_type {
+        PromptLabType::Web => QUALIFICATION_WEB_PATH,
+        PromptLabType::Terminal => QUALIFICATION_TERMINAL_PATH,
+    };
+
+    load_required_asset(relative)
 }
 
 fn load_required_asset(relative: &str) -> std::io::Result<String> {

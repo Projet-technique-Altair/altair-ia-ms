@@ -9,6 +9,7 @@ const MAX_ITEM_LENGTH: usize = 180;
 #[derive(Debug, Clone)]
 pub struct StructuredExecutionInput {
     pub mode: RunMode,
+    pub lab_type: LabType,
     pub prompt: String,
 }
 
@@ -72,7 +73,11 @@ pub fn normalize_structured_execution(
     };
     let prompt = build_lab_request_xml(&request_payload);
 
-    Ok(StructuredExecutionInput { mode, prompt })
+    Ok(StructuredExecutionInput {
+        mode,
+        lab_type,
+        prompt,
+    })
 }
 
 fn build_lab_request_xml(input: &LabRequestPayload) -> String {
