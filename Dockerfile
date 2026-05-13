@@ -13,7 +13,9 @@ RUN rm -rf src
 COPY src ./src
 COPY playbooks ./playbooks
 COPY system-prompts ./system-prompts
-RUN cargo build --release --locked && strip /app/target/release/altair-ia-ms
+# The dependency-layer build above creates a placeholder binary. Force the real
+# source tree to be newer than that artifact so Cargo cannot reuse the dummy.
+RUN touch src/main.rs && cargo build --release --locked && strip /app/target/release/altair-ia-ms
 
 FROM gcr.io/distroless/cc-debian12:nonroot
 WORKDIR /app
