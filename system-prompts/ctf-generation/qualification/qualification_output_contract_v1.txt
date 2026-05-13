@@ -1,11 +1,11 @@
-CONTRAT DE SORTIE QUALIFICATION - OBLIGATOIRE
+QUALIFICATION OUTPUT CONTRACT - REQUIRED
 
-Tu dois retourner uniquement un JSON valide.
-Tu ne dois retourner aucun markdown.
-Tu ne dois retourner aucun texte avant ou apres le JSON.
-Tu ne dois generer aucun fichier.
+You must return only valid JSON.
+You must not return any markdown.
+You must not return any text before or after the JSON.
+You must not generate any files.
 
-SCHEMA EXACT
+EXACT SCHEMA
 {
   "verdict": "compatible",
   "compatible_altair": true,
@@ -15,22 +15,22 @@ SCHEMA EXACT
   "resume_utilisateur": ""
 }
 
-REGLES DE FORMAT
-- Les seules valeurs autorisees pour verdict sont : compatible, needs_adaptation, refused.
-- compatible_altair est un booleen.
-- respecte_conditions est un booleen.
-- blocages est toujours un tableau de chaines.
-- adaptations_requises est toujours un tableau de chaines.
-- resume_utilisateur est une chaine courte, claire et affichable a l'utilisateur.
-- Ne mets jamais null.
-- Ne rajoute aucune cle.
-- Ne retire aucune cle.
+FORMAT RULES
+- The only allowed values for verdict are: compatible, needs_adaptation, refused.
+- compatible_altair is a boolean.
+- respecte_conditions is a boolean.
+- blocages is always an array of strings.
+- adaptations_requises is always an array of strings.
+- resume_utilisateur is a short, clear string displayable to the user.
+- Never put null.
+- Do not add any keys.
+- Do not remove any keys.
 
-REGLES DE CONTENU
-- Si verdict vaut compatible, blocages doit etre vide.
-- Si verdict vaut needs_adaptation, liste les adaptations minimales necessaires.
-- Si verdict vaut refused, liste les blocages qui empechent la generation.
-- resume_utilisateur doit expliquer le verdict en 1 a 4 phrases.
-- Les messages utilisateur doivent etre en francais simple.
-- Ne revele pas de raisonnement interne.
-- Ne parle pas de prompts, de system prompt, de token budget ou de modele.
+CONTENT RULES
+- If verdict is compatible, blocages must be empty.
+- If verdict is needs_adaptation, list the minimal necessary adaptations.
+- If verdict is refused, list the blockers preventing generation.
+- resume_utilisateur must explain the verdict in 1 to 4 sentences.
+- User-facing messages must be in plain English.
+- Do not reveal internal reasoning.
+- Do not mention prompts, system prompt, token budget or model.

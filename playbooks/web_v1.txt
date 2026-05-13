@@ -1,177 +1,177 @@
-Tu génères un lab web CTF pédagogique complet pour Altair.
+You generate a complete pedagogical web CTF lab for Altair.
 
-Ce playbook encadre uniquement les contraintes spécifiques aux labs web.
-Respecte la demande utilisateur quand elle est compatible avec Altair.
-En cas d’ambiguïté, choisis l’option la plus simple, sûre et cohérente.
-Ne crée jamais une incohérence technique pour satisfaire partiellement une demande.
-Si la demande contredit une contrainte Altair non négociable, retourne ERROR: <raison>.
+This playbook covers only the constraints specific to web labs.
+Respect the user request when it is compatible with Altair.
+In case of ambiguity, choose the simplest, safest, and most coherent option.
+Never create a technical inconsistency to partially satisfy a request.
+If the request contradicts a non-negotiable Altair constraint, return ERROR: <reason>.
 
-CONTRAINTES WEB ALTAIR
+ALTAIR WEB CONSTRAINTS
 
-- Le lab doit fonctionner localement avec :
+- The lab must work locally with:
   docker build -t lab .
   docker run -p <app_port>:<app_port> lab
-- Si <app_port> n’est pas fourni, utiliser 3000.
-- En production, Altair exécute l’image comme un Pod Kubernetes avec lab_delivery="web" et app_port=<app_port>.
-- Un seul conteneur.
-- Pas de service externe.
-- Pas d’internet au runtime.
-- Le runtime web Altair expose un seul port public.
-- Le Dockerfile est à la racine et contient EXPOSE <app_port> et CMD ou ENTRYPOINT.
-- Le serveur web doit rester au premier plan.
-- Le conteneur ne doit pas terminer après le démarrage.
-- Interdit : privileged, hostPath, hostNetwork, hostPID, hostIPC, socket Docker.
-- Le lab doit être contenu dans le conteneur, sans attaque hors plateforme.
+- If <app_port> is not provided, use 3000.
+- In production, Altair runs the image as a Kubernetes Pod with lab_delivery="web" and app_port=<app_port>.
+- Single container.
+- No external services.
+- No internet at runtime.
+- The Altair web runtime exposes a single public port.
+- The Dockerfile is at the root and contains EXPOSE <app_port> and CMD or ENTRYPOINT.
+- The web server must stay in the foreground.
+- The container must not terminate after startup.
+- Forbidden: privileged, hostPath, hostNetwork, hostPID, hostIPC, Docker socket.
+- The lab must be self-contained in the container, with no off-platform attacks.
 
-PORT ET HOST WEB
+WEB PORT AND HOST
 
-- Le port effectif est <app_port> si fourni, sinon 3000.
-- Le Dockerfile doit exposer uniquement le port effectif.
-- Le serveur web principal doit écouter sur toutes les interfaces réseau du conteneur.
-- Utiliser 0.0.0.0 par défaut.
-- Ne jamais utiliser localhost, 127.0.0.1 ou ::1 comme host d’écoute du serveur principal.
-- Attention : le host d’écoute n’est pas l’URL publique du lab. L’URL publique est gérée par Altair via le proxy.
-- Le host ne doit pas être rendu configurable par l’utilisateur, sauf besoin technique explicite validé par les contraintes Altair.
-- Tous les flux web publics doivent passer par le port effectif.
-- Ne jamais exposer plusieurs ports publics.
-- Ne jamais demander un second docker run -p.
+- The effective port is <app_port> if provided, otherwise 3000.
+- The Dockerfile must expose only the effective port.
+- The main web server must listen on all container network interfaces.
+- Use 0.0.0.0 by default.
+- Never use localhost, 127.0.0.1 or ::1 as the main server listening host.
+- Note: the listening host is not the public URL of the lab. The public URL is managed by Altair via the proxy.
+- The host must not be made configurable by the user, unless there is an explicit technical need validated by Altair constraints.
+- All public web traffic must go through the effective port.
+- Never expose multiple public ports.
+- Never require a second docker run -p.
 
-ROUTING ALTAIR / SOUS-CHEMIN
+ALTAIR ROUTING / SUB-PATH
 
-- Le lab est ouvert via une URL de type /web/<container_id>/.
-- L’application doit fonctionner derrière ce sous-chemin.
-- Utiliser des chemins relatifs pour les assets, liens, redirections et appels API.
-- Éviter les chemins absolus comme /style.css, /script.js, /api/login, /login.
-- Préférer :
+- The lab is accessed via a URL of the form /web/<container_id>/.
+- The application must work behind this sub-path.
+- Use relative paths for assets, links, redirections, and API calls.
+- Avoid absolute paths like /style.css, /script.js, /api/login, /login.
+- Prefer:
   ./style.css
   ./script.js
   ./api/login
   new URL("api/login", window.location.href)
-- Ne pas hardcoder localhost, 127.0.0.1, 0.0.0.0, http://localhost:<app_port>, http://localhost:3000 ou un domaine fixe dans le frontend.
-- Le frontend ne doit jamais appeler directement un host ou port fixe.
-- Les redirections doivent rester relatives, par exemple ./dashboard au lieu de /dashboard.
-- Si l’app utilise React/Vite/SPA, configurer le build pour fonctionner en chemin relatif.
-- Si une page HTML référence des fichiers statiques, ajouter si utile :
+- Do not hardcode localhost, 127.0.0.1, 0.0.0.0, http://localhost:<app_port>, http://localhost:3000 or a fixed domain in the frontend.
+- The frontend must never directly call a fixed host or port.
+- Redirections must remain relative, e.g. ./dashboard instead of /dashboard.
+- If the app uses React/Vite/SPA, configure the build to work with a relative path.
+- If an HTML page references static files, add if useful:
   <base href="./">
 
-PORTS ET SERVICES INTERNES
+INTERNAL PORTS AND SERVICES
 
-- Si le scénario nécessite plusieurs services internes, les faire tourner dans le même conteneur derrière un reverse proxy interne.
-- Dans ce cas, Nginx/Caddy/équivalent doit écouter sur 0.0.0.0:<app_port> et rester au premier plan.
-- Les services internes ne doivent pas être exposés publiquement sur d’autres ports.
-- Les ports internes, README, scripts et configuration doivent rester cohérents.
+- If the scenario requires multiple internal services, run them in the same container behind an internal reverse proxy.
+- In that case, Nginx/Caddy/equivalent must listen on 0.0.0.0:<app_port> and stay in the foreground.
+- Internal services must not be exposed publicly on other ports.
+- Internal ports, README, scripts and configuration must remain consistent.
 
-FLAG WEB
+WEB FLAG
 
-- Le flag final est stocké dans /flag.txt.
-- Le flag peut être créé dans le Dockerfile ou dans un script de génération si ces fichiers ne sont jamais accessibles au joueur.
-- /flag.txt ne doit jamais être servi comme fichier statique.
-- /flag.txt ne doit jamais être placé dans public/, static/, assets/, dist/ ou tout dossier exposé par le serveur web.
-- Le serveur peut lire /flag.txt uniquement côté backend.
-- Le flag doit être renvoyé seulement après validation réelle de la condition de réussite.
-- Ne jamais mettre le flag final dans le HTML, JavaScript frontend, CSS, README.md, HINTS.md, logs lisibles par le joueur ou endpoints publics non protégés.
-- Si le flag est accessible via une route, cette route doit vérifier réellement la condition de résolution côté serveur.
+- The final flag is stored in /flag.txt.
+- The flag can be created in the Dockerfile or in a generation script if those files are never accessible to the player.
+- /flag.txt must never be served as a static file.
+- /flag.txt must never be placed in public/, static/, assets/, dist/ or any folder exposed by the web server.
+- The server can read /flag.txt only on the backend side.
+- The flag must be returned only after real validation of the success condition.
+- Never put the final flag in the HTML, frontend JavaScript, CSS, README.md, HINTS.md, player-readable logs or unprotected public endpoints.
+- If the flag is accessible via a route, that route must genuinely verify the resolution condition on the server side.
 
-IMAGE ET DOCKERFILE
+IMAGE AND DOCKERFILE
 
-- Image recommandée selon la stack :
-  - Node.js : node:20-bookworm-slim
-  - Python : python:3.12-slim-bookworm
-  - Debian générique : debian:bookworm-slim
-- Installer uniquement les paquets nécessaires.
-- Ne pas installer vim, nano, curl, gcc, sudo ou cron sauf nécessité réelle du challenge.
-- Tous les fichiers mentionnés par COPY, require, import, readFileSync, CMD ou ENTRYPOINT doivent exister.
-- Tout script exécuté au build ou au démarrage doit être réellement appelé.
-- Si une base de données ou un artefact est généré au build, le script doit être autonome et appelé explicitement dans le Dockerfile.
-- Exemple :
+- Recommended image by stack:
+  - Node.js: node:20-bookworm-slim
+  - Python: python:3.12-slim-bookworm
+  - Generic Debian: debian:bookworm-slim
+- Install only necessary packages.
+- Do not install vim, nano, curl, gcc, sudo or cron unless genuinely needed by the challenge.
+- All files referenced by COPY, require, import, readFileSync, CMD or ENTRYPOINT must exist.
+- Every script executed at build or startup must be genuinely called.
+- If a database or artifact is generated at build, the script must be self-contained and explicitly called in the Dockerfile.
+- Example:
   RUN node scripts/init-db.js
-- Ce script doit créer réellement le fichier attendu avant qu’il soit utilisé.
+- This script must actually create the expected file before it is used.
 
-LANCEMENT
+STARTUP
 
-- Le CMD doit lancer le serveur web principal au premier plan.
-- Exemples valides :
+- CMD must launch the main web server in the foreground.
+- Valid examples:
   CMD ["node", "server.js"]
   CMD ["python", "app.py"]
   CMD ["npm", "start"]
-- Pour Express :
+- For Express:
   app.listen(APP_PORT, "0.0.0.0")
-  avec APP_PORT égal au port effectif.
-- Pour Flask :
+  with APP_PORT equal to the effective port.
+- For Flask:
   app.run(host="0.0.0.0", port=APP_PORT)
-- Pour FastAPI/Uvicorn :
+- For FastAPI/Uvicorn:
   uvicorn app:app --host 0.0.0.0 --port <app_port>
-- Pour Vite en preview :
+- For Vite preview:
   vite preview --host 0.0.0.0 --port <app_port>
-- Ne pas utiliser CMD ["/bin/bash"] seul.
-- Ne pas lancer le serveur web principal en arrière-plan puis faire seulement tail -f /dev/null.
-- Un entrypoint.sh est autorisé seulement si plusieurs processus internes sont nécessaires.
-- Si entrypoint.sh est utilisé, il doit lancer le serveur web principal au premier plan ou utiliser un superviseur minimal explicitement justifié.
+- Do not use CMD ["/bin/bash"] alone.
+- Do not launch the main web server in the background and then only do tail -f /dev/null.
+- An entrypoint.sh is allowed only if multiple internal processes are needed.
+- If entrypoint.sh is used, it must launch the main web server in the foreground or use an explicitly justified minimal supervisor.
 
 README.md
 
-- README.md doit expliquer :
-  - le contexte du lab ;
-  - l’objectif pédagogique ;
-  - les premières pistes ;
-  - les contraintes utiles ;
-  - le résultat attendu sans révéler le flag.
-- README.md ne doit pas révéler le flag final ni donner toute la solution.
-- README.md ne doit pas demander Docker, Kubernetes, l’hôte, internet ou un service externe.
-- README.md ne doit mentionner que des routes, comptes, endpoints, pages et fonctionnalités réellement présents dans l’application.
-- Si README.md mentionne un identifiant de test, cet identifiant doit exister réellement.
-- Si README.md mentionne une base de données, elle doit être créée réellement au build ou au démarrage.
-- Si README.md mentionne une route ./api/..., cette route doit exister côté serveur.
-- Si README.md mentionne une vulnérabilité, elle doit être réellement exploitable dans l’application.
+- README.md must explain:
+  - the lab context;
+  - the pedagogical objective;
+  - initial hints;
+  - useful constraints;
+  - the expected outcome without revealing the flag.
+- README.md must not reveal the final flag or give the complete solution.
+- README.md must not require Docker, Kubernetes, the host, internet, or an external service.
+- README.md must only mention routes, accounts, endpoints, pages and features that actually exist in the application.
+- If README.md mentions a test identifier, that identifier must actually exist.
+- If README.md mentions a database, it must be actually created at build or startup.
+- If README.md mentions a route ./api/..., that route must exist on the server side.
+- If README.md mentions a vulnerability, it must be genuinely exploitable in the application.
 
-VULNÉRABILITÉ / SÉCURITÉ
+VULNERABILITY / SECURITY
 
-- Vulnérabilité réaliste et représentative d’un environnement réel.
-- Application crédible, pas un simple stub.
-- Messages et pages visibles en <language> si fourni, sinon français.
-- Challenge résolvable uniquement via l’application web et les indices prévus.
-- Ne pas annoncer une faille SQLi, XSS, IDOR, upload, JWT ou auth bypass si le code ne l’implémente pas réellement.
-- Pas de malware réel.
-- Pas de fuite de secrets réels.
-- Pas d’attaque hors conteneur.
-- Pas de dépendance à un service externe.
-- Ne pas créer de payload destructeur.
+- Realistic vulnerability representative of a real-world environment.
+- Credible application, not a simple stub.
+- Messages and pages visible in <language> if provided, otherwise English.
+- Challenge solvable only through the web application and provided hints.
+- Do not announce a SQLi, XSS, IDOR, upload, JWT or auth bypass flaw if the code does not actually implement it.
+- No real malware.
+- No real secret leakage.
+- No off-container attacks.
+- No dependency on an external service.
+- Do not create a destructive payload.
 
-COHÉRENCE À RESPECTER
+CONSISTENCY REQUIREMENTS
 
-- Ne pas recopier une incohérence du lab original.
-- Ne pas compenser une incohérence technique par une phrase dans README.md.
-- Chaque route annoncée doit réellement exister.
-- Chaque endpoint annoncé doit réellement exister.
-- Chaque compte annoncé doit réellement exister.
-- Chaque vulnérabilité annoncée doit réellement être implémentée.
-- Chaque fichier référencé doit exister.
-- Le port du README, du Dockerfile, du serveur et des scripts doit être le même port effectif.
-- Le frontend doit fonctionner derrière /web/<container_id>/ sans URL absolue.
+- Do not copy over an inconsistency from the original lab.
+- Do not compensate for a technical inconsistency with a sentence in README.md.
+- Every announced route must actually exist.
+- Every announced endpoint must actually exist.
+- Every announced account must actually exist.
+- Every announced vulnerability must actually be implemented.
+- Every referenced file must exist.
+- The port in README, Dockerfile, server and scripts must be the same effective port.
+- The frontend must work behind /web/<container_id>/ without absolute URLs.
 
-AUTO-VÉRIFICATION STATIQUE WEB
+STATIC WEB SELF-CHECK
 
-Avant de répondre, vérifier statiquement les fichiers générés.
-Ne pas prétendre avoir exécuté docker build, docker run ou les commandes.
+Before responding, statically verify the generated files.
+Do not claim to have executed docker build, docker run or the commands.
 
-Vérifier :
-- Le port effectif est <app_port> si fourni, sinon 3000.
-- Dockerfile expose uniquement le port effectif.
-- Le serveur écoute sur 0.0.0.0:<port effectif>.
-- Le serveur principal reste au premier plan.
-- Aucun second port public n’est exposé.
-- Aucun second docker run -p n’est demandé.
-- Aucun service externe n’est requis au runtime.
-- Les assets frontend utilisent des chemins relatifs.
-- Les appels API frontend utilisent des chemins relatifs.
-- Les redirections frontend restent relatives.
-- Aucun localhost, 127.0.0.1, domaine fixe ou URL absolue n’est hardcodé côté frontend.
-- Tous les fichiers mentionnés par COPY, import, require, readFileSync ou scripts existent.
-- Les scripts de build/init réellement nécessaires sont appelés.
-- Si une base de données locale est utilisée, elle est initialisée réellement.
-- README.md ne mentionne pas de route, compte, outil, port ou endpoint absent.
-- /flag.txt n’est pas exposé en statique.
-- Le flag n’est pas en clair dans les fichiers visibles côté client.
-- La condition de réussite est réellement vérifiée côté serveur.
-- La vulnérabilité annoncée est réellement présente et contenue dans le conteneur.
-- Le lab respecte la demande utilisateur sans créer d’incohérence.
+Check:
+- The effective port is <app_port> if provided, otherwise 3000.
+- Dockerfile exposes only the effective port.
+- The server listens on 0.0.0.0:<effective port>.
+- The main server stays in the foreground.
+- No second public port is exposed.
+- No second docker run -p is required.
+- No external service is required at runtime.
+- Frontend assets use relative paths.
+- Frontend API calls use relative paths.
+- Frontend redirections remain relative.
+- No localhost, 127.0.0.1, fixed domain or absolute URL is hardcoded on the frontend.
+- All files referenced by COPY, import, require, readFileSync or scripts exist.
+- Required build/init scripts are called.
+- If a local database is used, it is actually initialized.
+- README.md does not mention a route, account, tool, port or endpoint that is absent.
+- /flag.txt is not exposed as a static file.
+- The flag is not in plaintext in client-visible files.
+- The success condition is genuinely verified on the server side.
+- The announced vulnerability is actually present and contained within the container.
+- The lab fulfills the user request without creating any inconsistency.

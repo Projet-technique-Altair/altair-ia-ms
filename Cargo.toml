@@ -31,6 +31,5 @@ sqlx = { version = "0.8", features = [
   "uuid",
   "chrono",
   "json",
-  "tls-rustls",
-  "migrate"
+  "tls-rustls"
 ] }

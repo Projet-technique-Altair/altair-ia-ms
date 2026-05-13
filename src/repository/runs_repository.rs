@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::Path, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 use chrono::{DateTime, Utc};
 use sqlx::{types::Json, FromRow, PgPool};
@@ -87,8 +87,6 @@ impl RunsRepository {
             let pool = PgPool::connect(database_url)
                 .await
                 .map_err(|e| AppError::Internal(format!("failed to connect database: {e}")))?;
-
-            run_optional_migrations(&pool).await?;
 
             return Ok(Self {
                 store: RunsStore::Postgres(pool),
@@ -409,24 +407,6 @@ impl RunsRepository {
     }
 }
 
-async fn run_optional_migrations(pool: &PgPool) -> Result<(), AppError> {
-    let migrations_path = Path::new("./migrations");
-    if !migrations_path.exists() {
-        tracing::info!("database migrations directory not present; skipping startup migrations");
-        return Ok(());
-    }
-
-    let migrator = sqlx::migrate::Migrator::new(migrations_path)
-        .await
-        .map_err(|e| AppError::Internal(format!("failed to load migrations: {e}")))?;
-
-    migrator
-        .run(pool)
-        .await
-        .map_err(|e| AppError::Internal(format!("failed to run migrations: {e}")))?;
-
-    Ok(())
-}
 
 #[cfg(test)]
 mod tests {
