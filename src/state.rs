@@ -40,12 +40,37 @@ impl AppState {
         )
         .await?;
 
+        let fallback_config = || {
+            LlmFallbackConfig::new(
+                config.gemini_max_attempts,
+                config.claude_max_attempts,
+                config.llm_attempt_timeout_seconds,
+            )
+        };
+
         let llm = match &config.llm_provider {
-            LlmProvider::Anthropic => LlmClient::Anthropic(AnthropicService::new(
-                config.anthropic_api_key.clone(),
-                config.anthropic_base_url.clone(),
-                config.anthropic_model.clone(),
-            )),
+            LlmProvider::Anthropic => {
+                let claude = AnthropicService::new(
+                    config.anthropic_api_key.clone(),
+                    config.anthropic_base_url.clone(),
+                    config.anthropic_model.clone(),
+                );
+
+                if config.llm_fallback_enabled {
+                    LlmClient::AnthropicWithGeminiFallback(FallbackLlmClient::anthropic_primary(
+                        claude,
+                        GeminiService::new(
+                            config.gemini_api_key.clone(),
+                            config.gemini_base_url.clone(),
+                            config.gemini_model.clone(),
+                            config.gemini_thinking_level.clone(),
+                        ),
+                        fallback_config(),
+                    ))
+                } else {
+                    LlmClient::Anthropic(claude)
+                }
+            }
             LlmProvider::Gemini => {
                 let gemini = GeminiService::new(
                     config.gemini_api_key.clone(),
@@ -55,18 +80,14 @@ impl AppState {
                 );
 
                 if config.llm_fallback_enabled {
-                    LlmClient::GeminiWithClaudeFallback(FallbackLlmClient::new(
+                    LlmClient::GeminiWithClaudeFallback(FallbackLlmClient::gemini_primary(
                         gemini,
                         AnthropicService::new(
                             config.anthropic_api_key.clone(),
                             config.anthropic_base_url.clone(),
                             config.anthropic_model.clone(),
                         ),
-                        LlmFallbackConfig::new(
-                            config.gemini_max_attempts,
-                            config.claude_max_attempts,
-                            config.llm_attempt_timeout_seconds,
-                        ),
+                        fallback_config(),
                     ))
                 } else {
                     LlmClient::Gemini(gemini)
@@ -77,7 +98,10 @@ impl AppState {
         tracing::info!(
             llm_provider = llm.provider_name(),
             llm_model = llm.model_name(),
-            llm_fallback_enabled = matches!(&llm, LlmClient::GeminiWithClaudeFallback(_)),
+            llm_fallback_enabled = matches!(
+                &llm,
+                LlmClient::GeminiWithClaudeFallback(_) | LlmClient::AnthropicWithGeminiFallback(_)
+            ),
             gemini_max_attempts = config.gemini_max_attempts,
             claude_max_attempts = config.claude_max_attempts,
             llm_attempt_timeout_seconds = config.llm_attempt_timeout_seconds,

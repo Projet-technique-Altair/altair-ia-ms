@@ -117,6 +117,7 @@ pub enum LlmClient {
     Anthropic(AnthropicService),
     Gemini(GeminiService),
     GeminiWithClaudeFallback(FallbackLlmClient),
+    AnthropicWithGeminiFallback(FallbackLlmClient),
 }
 
 impl LlmClient {
@@ -124,7 +125,8 @@ impl LlmClient {
         match self {
             Self::Anthropic(_) => "anthropic",
             Self::Gemini(_) => "gemini",
-            Self::GeminiWithClaudeFallback(_) => "gemini",
+            Self::GeminiWithClaudeFallback(service)
+            | Self::AnthropicWithGeminiFallback(service) => service.primary_provider_name(),
         }
     }
 
@@ -132,7 +134,8 @@ impl LlmClient {
         match self {
             Self::Anthropic(service) => service.model_name(),
             Self::Gemini(service) => service.model_name(),
-            Self::GeminiWithClaudeFallback(service) => service.primary_model_name(),
+            Self::GeminiWithClaudeFallback(service)
+            | Self::AnthropicWithGeminiFallback(service) => service.primary_model_name(),
         }
     }
 
@@ -145,7 +148,8 @@ impl LlmClient {
         match self {
             Self::Anthropic(service) => service.count_tokens(run_id, system, user_message).await,
             Self::Gemini(service) => service.count_tokens(run_id, system, user_message).await,
-            Self::GeminiWithClaudeFallback(service) => {
+            Self::GeminiWithClaudeFallback(service)
+            | Self::AnthropicWithGeminiFallback(service) => {
                 service.count_tokens(run_id, system, user_message).await
             }
         }
@@ -166,7 +170,8 @@ impl LlmClient {
         match self {
             Self::Anthropic(service) => service.generate_lab_files(input).await,
             Self::Gemini(service) => service.generate_lab_files(input).await,
-            Self::GeminiWithClaudeFallback(service) => service.generate_lab_files(input).await,
+            Self::GeminiWithClaudeFallback(service)
+            | Self::AnthropicWithGeminiFallback(service) => service.generate_lab_files(input).await,
         }
     }
 
@@ -178,7 +183,8 @@ impl LlmClient {
         match self {
             Self::Anthropic(service) => service.generate_lab_files(input).await,
             Self::Gemini(service) => service.generate_lab_files(input).await,
-            Self::GeminiWithClaudeFallback(service) => {
+            Self::GeminiWithClaudeFallback(service)
+            | Self::AnthropicWithGeminiFallback(service) => {
                 service
                     .generate_lab_files_with_preferred_provider(input, preferred_provider)
                     .await
@@ -191,7 +197,8 @@ impl LlmClient {
         match self {
             Self::Anthropic(service) => service.advise(prompt).await,
             Self::Gemini(service) => service.advise(prompt).await,
-            Self::GeminiWithClaudeFallback(service) => service
+            Self::GeminiWithClaudeFallback(service)
+            | Self::AnthropicWithGeminiFallback(service) => service
                 .advise(prompt, "advise", Uuid::nil())
                 .await
                 .map_err(anyhow::Error::msg),
@@ -213,7 +220,8 @@ impl LlmClient {
                 .advise(prompt)
                 .await
                 .map_err(|e| LlmError::new(LlmErrorKind::ModelUnavailable, e.to_string())),
-            Self::GeminiWithClaudeFallback(service) => {
+            Self::GeminiWithClaudeFallback(service)
+            | Self::AnthropicWithGeminiFallback(service) => {
                 service.advise(prompt, mode, request_id).await
             }
         }

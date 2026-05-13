@@ -4,26 +4,37 @@ use uuid::Uuid;
 use crate::{error::AppError, models::api::ApiResponse, state::AppState};
 
 async fn verify_internal_request(state: &AppState, headers: &HeaderMap) -> Result<(), AppError> {
-    if let Some(verifier) = &state.oidc_verifier {
-        verifier.verify_headers(headers).await?;
-    } else if let Some(token) = &state.config.internal_worker_token {
-        let incoming = headers
-            .get("x-internal-worker-token")
-            .and_then(|h| h.to_str().ok())
-            .unwrap_or_default();
+    if internal_worker_token_matches(state.config.internal_worker_token.as_deref(), headers) {
+        return Ok(());
+    }
 
-        if incoming != token {
-            return Err(AppError::Unauthorized(
-                "invalid internal worker token".to_string(),
-            ));
-        }
-    } else {
+    if let Some(verifier) = &state.oidc_verifier {
+        return verifier.verify_headers(headers).await;
+    }
+
+    if state.config.internal_worker_token.is_some() {
         return Err(AppError::Unauthorized(
-            "internal endpoint auth is not configured".to_string(),
+            "invalid internal worker token".to_string(),
         ));
     }
 
-    Ok(())
+    Err(AppError::Unauthorized(
+        "internal endpoint auth is not configured".to_string(),
+    ))
+}
+
+fn internal_worker_token_matches(configured_token: Option<&str>, headers: &HeaderMap) -> bool {
+    let Some(token) = configured_token
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    else {
+        return false;
+    };
+
+    headers
+        .get("x-internal-worker-token")
+        .and_then(|h| h.to_str().ok())
+        .is_some_and(|incoming| incoming == token)
 }
 
 pub async fn process_run_internal(
@@ -315,4 +326,42 @@ fn local_structured_report(payload: &serde_json::Value) -> serde_json::Value {
             "S'appuyer sur les commandes significatives et les blocages probables avant d'intervenir."
         ]
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use axum::http::{HeaderMap, HeaderValue};
+
+    use super::internal_worker_token_matches;
+
+    #[test]
+    fn internal_worker_token_match_accepts_configured_header() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "x-internal-worker-token",
+            HeaderValue::from_static("shared-token"),
+        );
+
+        assert!(internal_worker_token_matches(
+            Some("shared-token"),
+            &headers
+        ));
+    }
+
+    #[test]
+    fn internal_worker_token_match_rejects_missing_or_wrong_header() {
+        let mut headers = HeaderMap::new();
+        assert!(!internal_worker_token_matches(
+            Some("shared-token"),
+            &headers
+        ));
+
+        headers.insert("x-internal-worker-token", HeaderValue::from_static("wrong"));
+        assert!(!internal_worker_token_matches(
+            Some("shared-token"),
+            &headers
+        ));
+        assert!(!internal_worker_token_matches(None, &headers));
+        assert!(!internal_worker_token_matches(Some(" "), &headers));
+    }
 }

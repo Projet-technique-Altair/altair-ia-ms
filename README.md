@@ -27,8 +27,8 @@ Async IA microservice skeleton for Altair labs.
   - local (`tokio::spawn`) when `CLOUD_TASKS_ENABLED=false`
   - Cloud Tasks when `CLOUD_TASKS_ENABLED=true`
 - Internal worker auth:
-  - OIDC verification when Cloud Tasks mode is enabled
-  - fallback internal token header when `INTERNAL_WORKER_TOKEN` is set
+  - `x-internal-worker-token` is accepted first when `INTERNAL_WORKER_TOKEN` is set
+  - OIDC verification is used otherwise when Cloud Tasks mode is enabled
 
 ## Prompt assets
 - Prompt layers and playbooks for CTF generation are file-based under:
@@ -42,9 +42,12 @@ Async IA microservice skeleton for Altair labs.
 Use one profile file and copy it to `.env`.
 
 ## LLM provider
-Gemini is the primary LLM provider. When `LLM_PROVIDER=gemini` and
-`LLM_FALLBACK_ENABLED=true`, the service retries Gemini only for overload or
-temporary-unavailability errors, then falls back to Claude.
+`LLM_PROVIDER` selects the primary LLM provider. When `LLM_FALLBACK_ENABLED=true`,
+the service retries the primary provider only for overload or temporary-unavailability
+errors, then falls back to the other configured provider:
+- `LLM_PROVIDER=gemini` falls back to Claude / Anthropic.
+- `LLM_PROVIDER=anthropic` or `claude` falls back to Gemini.
+
 Changing LLM settings requires restarting/redeploying `altair-ia-ms`.
 
 ```env
@@ -108,7 +111,7 @@ result zip from `altair-ia-ms`.
 
 ### Pseudo-prod profile
 1. `cp .env.pseudo-prod.example .env`
-2. Fill Cloud/GCP values (`WORKER_TARGET_BASE_URL`, `WORKER_OIDC_AUDIENCE`, DB) and LLM API keys. With Gemini fallback enabled, both Gemini and Anthropic keys are required.
+2. Fill Cloud/GCP values (`WORKER_TARGET_BASE_URL`, `WORKER_OIDC_AUDIENCE`, DB) and LLM API keys. With LLM fallback enabled, both Gemini and Anthropic keys are required.
 3. Start service:
 
 ```bash
@@ -121,8 +124,9 @@ cargo run
 - `DATABASE_URL`, `WORKER_TARGET_BASE_URL`, `WORKER_OIDC_SERVICE_ACCOUNT`, `GCS_SIGNING_SERVICE_ACCOUNT` must be set
 - `ANTHROPIC_API_KEY` must be set when `LLM_PROVIDER=anthropic`
 - `GEMINI_API_KEY` must be set when `LLM_PROVIDER=gemini`
-- `ANTHROPIC_API_KEY` must also be set when `LLM_PROVIDER=gemini` and `LLM_FALLBACK_ENABLED=true`
+- the fallback provider API key must also be set when `LLM_FALLBACK_ENABLED=true`
 - `REQUIRE_CREATOR_ROLE=true`
+- `INTERNAL_WORKER_TOKEN` should be set when `sessions-ms` calls internal IA report endpoints with the shared-token path.
 
 LLM attempt logs are structured with fields such as `llm.provider`,
 `llm.attempt`, `llm.mode`, `llm.status`, `llm.error_type`,

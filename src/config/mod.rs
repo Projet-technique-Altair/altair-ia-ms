@@ -150,7 +150,7 @@ impl AppConfig {
             .map(|v| v == "true" || v == "1")
             .unwrap_or(false);
 
-        let internal_worker_token = std::env::var("INTERNAL_WORKER_TOKEN").ok();
+        let internal_worker_token = read_optional_env("INTERNAL_WORKER_TOKEN");
 
         let gcs_signed_url_mode = std::env::var("GCS_SIGNED_URL_MODE")
             .unwrap_or_else(|_| "iam_signblob".to_string())
@@ -318,6 +318,15 @@ impl AppConfig {
                             .to_string(),
                     );
                 }
+                if matches!(self.llm_provider, LlmProvider::Anthropic)
+                    && self.llm_fallback_enabled
+                    && !has_gemini_key
+                {
+                    return Err(
+                        "IA_RUNTIME_MODE=pseudo_prod with Anthropic fallback enabled requires GEMINI_API_KEY to be set"
+                            .to_string(),
+                    );
+                }
                 if !has_worker_base_url {
                     return Err(
                         "IA_RUNTIME_MODE=pseudo_prod requires WORKER_TARGET_BASE_URL to be set"
@@ -353,6 +362,13 @@ fn parse_bool_env(name: &str, default: bool) -> bool {
             )
         })
         .unwrap_or(default)
+}
+
+fn read_optional_env(name: &str) -> Option<String> {
+    std::env::var(name)
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
 }
 
 fn parse_u8_env(name: &str, default: u8, min: u8, max: u8) -> u8 {
