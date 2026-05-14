@@ -1,4 +1,4 @@
-const ALLOWED_EXTENSIONS: [&str; 7] = [".txt", ".md", ".json", ".js", ".html", ".css", ".sh"];
+const ALLOWED_EXTENSIONS: [&str; 8] = [".txt", ".md", ".json", ".js", ".html", ".css", ".sh", ".c"];
 
 const BLOCKED_EXTENSIONS: [&str; 19] = [
     "exe", "dll", "so", "dylib", "bat", "cmd", "ps1", "msi", "bin", "elf", "jar", "class", "pyc",
@@ -52,6 +52,7 @@ mod tests {
         assert!(is_text_path("uploads/r1/Dockerfile"));
         assert!(is_allowed_upload_name("README.md"));
         assert!(is_allowed_upload_name("assets/app.min.js"));
+        assert!(is_allowed_upload_name("src/runner.c"));
     }
 
     #[test]
