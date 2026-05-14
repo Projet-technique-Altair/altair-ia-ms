@@ -160,11 +160,11 @@ pub async fn build_qualification_base_lab_block(
 fn build_prompt(system: &str, lab_request_xml: &str, base_lab_block: Option<&str>) -> String {
     let base_lab = base_lab_block
         .filter(|block| !block.trim().is_empty())
-        .map(|block| format!("\n\nSOURCE DE VARIANTE A QUALIFIER :\n{block}"))
+        .map(|block| format!("\n\nVARIANT SOURCE TO QUALIFY:\n{block}"))
         .unwrap_or_default();
 
     format!(
-        "{system}\n\nDEMANDE A QUALIFIER :\n{lab_request_xml}{base_lab}\n\nRetourne uniquement le JSON de qualification."
+        "{system}\n\nREQUEST TO QUALIFY:\n{lab_request_xml}{base_lab}\n\nReturn only the qualification JSON."
     )
 }
 
@@ -191,14 +191,14 @@ fn build_retry_prompt(system: &str, validation_error: &str, raw: &str) -> String
     format!(
         r#"{system}
 
-La sortie precedente est invalide.
+The previous output is invalid.
 
-Erreur de validation : {validation_error}
+Validation error: {validation_error}
 
-Corrige uniquement le JSON en respectant exactement le contrat de qualification.
-Ne rajoute aucun texte autour du JSON.
+Fix only the JSON while following the qualification contract exactly.
+Do not add any text around the JSON.
 
-Sortie precedente :
+Previous output:
 {raw}"#
     )
 }
@@ -296,23 +296,23 @@ fn local_qualification(lab_request_xml: &str) -> QualificationResponse {
     let blockers = [
         (
             "docker-compose",
-            "La demande suppose docker-compose, non supporte par le runtime Altair.",
+            "The request assumes docker-compose, which is not supported by the Altair runtime.",
         ),
         (
             "privileged",
-            "La demande semble demander un mode privileged ou des privileges host.",
+            "The request appears to require privileged mode or host privileges.",
         ),
         (
             "plusieurs ports",
-            "La demande mentionne plusieurs ports publics.",
+            "The request mentions multiple public ports.",
         ),
         (
             "multiple public",
-            "La demande mentionne plusieurs points d'entree publics.",
+            "The request mentions multiple public entrypoints.",
         ),
         (
             "service externe obligatoire",
-            "La demande depend d'un service externe obligatoire.",
+            "The request depends on a mandatory external service.",
         ),
     ]
     .into_iter()
@@ -326,10 +326,10 @@ fn local_qualification(lab_request_xml: &str) -> QualificationResponse {
             respecte_conditions: false,
             blocages: blockers,
             adaptations_requises: vec![
-                "Adapter la demande pour un seul container Altair sans privilege host.".to_string(),
+                "Adapt the request to a single Altair container without host privileges.".to_string(),
             ],
             resume_utilisateur:
-                "Qualification locale : la demande contient des contraintes incompatibles avec Altair."
+                "Local qualification: the request contains constraints that are incompatible with Altair."
                     .to_string(),
         };
     }
@@ -341,8 +341,7 @@ fn local_qualification(lab_request_xml: &str) -> QualificationResponse {
         blocages: Vec::new(),
         adaptations_requises: Vec::new(),
         resume_utilisateur:
-            "Qualification locale : aucun blocage evident n'a ete detecte avant generation."
-                .to_string(),
+            "Local qualification: no obvious blocker was detected before generation.".to_string(),
     }
 }
 

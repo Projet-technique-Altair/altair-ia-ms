@@ -6,8 +6,8 @@ use crate::services::{
     anthropic::AnthropicService,
     gemini::GeminiService,
     llm::{
-        truncate_for_log, LabGenerationInput, LabGenerationOutput, LlmError, LlmErrorKind,
-        TokenCountEstimate,
+        LabGenerationInput, LabGenerationOutput, LlmError, LlmErrorKind, TokenCountEstimate,
+        truncate_for_log,
     },
     llm_config::{
         CLAUDE_MAX_ATTEMPTS_DEFAULT, GEMINI_MAX_ATTEMPTS_DEFAULT,
@@ -535,10 +535,6 @@ fn is_gemini_provider(provider: &str) -> bool {
     provider.eq_ignore_ascii_case("gemini") || provider.eq_ignore_ascii_case("google")
 }
 
-pub fn is_gemini_overloaded_error(error: &LlmError) -> bool {
-    is_provider_temporary_error("gemini", error)
-}
-
 pub fn is_provider_temporary_error(provider: &str, error: &LlmError) -> bool {
     // Fallback must stay selective: the secondary provider is only used for temporary provider failures.
     // Do not fallback for prompt, auth, payload, parsing or policy errors, otherwise the fallback
@@ -690,7 +686,7 @@ mod tests {
                 retry_after_seconds: None,
             };
 
-            assert!(is_gemini_overloaded_error(&error));
+            assert!(is_provider_temporary_error("gemini", &error));
         }
     }
 
@@ -705,7 +701,7 @@ mod tests {
         ] {
             let error = LlmError::new(LlmErrorKind::ModelUnavailable, message);
 
-            assert!(is_gemini_overloaded_error(&error));
+            assert!(is_provider_temporary_error("gemini", &error));
         }
     }
 
@@ -719,7 +715,7 @@ mod tests {
         ] {
             let error = LlmError::new(LlmErrorKind::InvalidRequest, message);
 
-            assert!(!is_gemini_overloaded_error(&error));
+            assert!(!is_provider_temporary_error("gemini", &error));
         }
     }
 

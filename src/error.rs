@@ -1,7 +1,7 @@
 use axum::{
+    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 
 use crate::models::api::{ApiError, ApiResponse};
@@ -79,18 +79,18 @@ impl AppError {
 
     pub fn public_message(&self) -> &'static str {
         match self {
-            Self::BadRequest(_) => "La demande est invalide. Verifiez les champs puis reessayez.",
-            Self::Unauthorized(_) => "Authentification requise.",
-            Self::Forbidden(_) => "Acces refuse.",
-            Self::NotFound(_) => "Ressource introuvable.",
-            Self::Conflict(_) => "La demande ne peut pas etre traitee pour le moment.",
-            Self::ModeNotAllowed(_) => "Mode non autorise.",
-            Self::UnsupportedFileType(_) => "Type de fichier non pris en charge.",
-            Self::FileTooLarge(_) => "Fichier trop volumineux.",
+            Self::BadRequest(_) => "The request is invalid. Check the fields and try again.",
+            Self::Unauthorized(_) => "Authentication is required.",
+            Self::Forbidden(_) => "Access denied.",
+            Self::NotFound(_) => "Resource not found.",
+            Self::Conflict(_) => "The request cannot be processed right now.",
+            Self::ModeNotAllowed(_) => "Mode is not allowed.",
+            Self::UnsupportedFileType(_) => "Unsupported file type.",
+            Self::FileTooLarge(_) => "File is too large.",
             Self::AiTemporarilyUnavailable(_) => {
-                "Le service IA est temporairement indisponible. Veuillez reessayer plus tard."
+                "The AI service is temporarily unavailable. Please try again later."
             }
-            Self::Internal(_) => "Une erreur s'est produite. Veuillez reessayer plus tard.",
+            Self::Internal(_) => "An error occurred. Please try again later.",
         }
     }
 
@@ -160,7 +160,7 @@ mod tests {
         let err = AppError::Internal("database password leaked in stack trace".to_string());
         assert_eq!(
             err.public_message(),
-            "Une erreur s'est produite. Veuillez reessayer plus tard."
+            "An error occurred. Please try again later."
         );
         assert!(err.message().contains("database password"));
     }
@@ -170,7 +170,7 @@ mod tests {
         let err = AppError::BadRequest("stack_main is required".to_string());
         assert_eq!(
             err.public_message(),
-            "La demande est invalide. Verifiez les champs puis reessayez."
+            "The request is invalid. Check the fields and try again."
         );
         assert!(err.message().contains("stack_main"));
     }
@@ -181,7 +181,7 @@ mod tests {
         assert_eq!(err.code(), "AI_TEMPORARILY_UNAVAILABLE");
         assert_eq!(
             err.public_message(),
-            "Le service IA est temporairement indisponible. Veuillez reessayer plus tard."
+            "The AI service is temporarily unavailable. Please try again later."
         );
         assert!(err.retryable());
     }

@@ -64,7 +64,6 @@ pub struct PresignUploadRequest {
 #[derive(Debug, Deserialize)]
 pub struct UploadFileItem {
     pub name: String,
-    pub content_type: Option<String>,
     pub size_bytes: Option<u64>,
 }
 

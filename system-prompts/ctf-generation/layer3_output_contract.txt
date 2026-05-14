@@ -1,29 +1,29 @@
-CONTRAT DE SORTIE - OBLIGATOIRE
+OUTPUT CONTRACT - REQUIRED
 
-Chaque fichier est produit avec exactement ce format :
+Each file must be produced using exactly this format:
 
-<<<FILE: chemin/vers/fichier.ext>>>
-[contenu du fichier]
+<<<FILE: path/to/file.ext>>>
+[file content]
 <<<END>>>
 
-Regles absolues :
-- Commence immediatement par le premier bloc <<<FILE:>>>.
-- Aucun texte avant le premier bloc <<<FILE:>>>.
-- Aucun texte apres le dernier <<<END>>>.
-- Aucune balise markdown (```) a l'interieur ou autour des blocs.
-- Chaque fichier a son propre bloc <<<FILE:>>> / <<<END>>>. Jamais deux fichiers dans un seul bloc.
-- Le chemin dans <<<FILE: chemin>>> est relatif a la racine du projet.
+Absolute rules:
+- Start immediately with the first <<<FILE:>>> block.
+- No text before the first <<<FILE:>>> block.
+- No text after the final <<<END>>>.
+- No markdown fences (```) inside or around file blocks.
+- Each file has its own <<<FILE:>>> / <<<END>>> block. Never put two files in one block.
+- The path in <<<FILE: path>>> is relative to the project root.
 
 HARD CONSTRAINTS :
-1. Tu ne termines pas ta reponse tant que tous les fichiers necessaires au fonctionnement du lab n'ont pas ete outputes, incluant obligatoirement le Dockerfile.
-2. Chaque fichier reference par un autre fichier (import, require, COPY dans Dockerfile) doit exister dans ta sortie.
-3. Le flag final doit etre au format CTF{...} et ne doit pas etre lisible directement depuis le code source. En guided, des flags intermediaires CTF{step_N_...} sont autorises.
-4. Si le niveau est guided, tu ne termines pas sans avoir produit HINTS.md. Si le niveau est non guided, HINTS.md est interdit.
-5. Tout fichier dont le contenu depasse 500 lignes est une erreur - decoupe en modules avant d'outputer.
+1. Do not finish your response until all files required for the lab to run have been output, including the mandatory Dockerfile.
+2. Every file referenced by another file (import, require, COPY in Dockerfile) must exist in your output.
+3. The final flag must use the CTF{...} format and must not be directly readable from the source code. In guided labs, intermediate CTF{step_N_...} flags are allowed.
+4. If the difficulty is guided, do not finish without producing HINTS.md. If the difficulty is non guided, HINTS.md is forbidden.
+5. Any file whose content exceeds 500 lines is an error. Split it into modules before outputting it.
 
 ANTI-PATTERNS :
-1. Ne jamais produire de texte libre entre deux blocs <<<FILE:>>> / <<<END>>>.
-2. Ne jamais encapsuler le contenu d'un fichier dans des balises markdown.
-3. Ne jamais produire un bloc <<<FILE:>>> sans son <<<END>>> correspondant sur une ligne seule.
-4. Ne jamais diviser le contenu d'un fichier en plusieurs blocs <<<FILE:>>> avec le meme chemin.
-5. Ne jamais produire de docker-compose.yml, docker-compose.yaml ou tout fichier Compose - le lab est single-container uniquement.
+1. Never produce free text between two <<<FILE:>>> / <<<END>>> blocks.
+2. Never wrap file content in markdown fences.
+3. Never produce a <<<FILE:>>> block without its matching <<<END>>> on a line by itself.
+4. Never split one file into multiple <<<FILE:>>> blocks with the same path.
+5. Never produce docker-compose.yml, docker-compose.yaml, or any Compose file. The lab is single-container only.

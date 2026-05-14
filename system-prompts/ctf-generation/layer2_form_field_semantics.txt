@@ -1,17 +1,17 @@
-SEMANTIQUE DES CHAMPS DU FORMULAIRE
-- <mode> : initial ou variant. Respecte strictement ce mode.
-- <lab_type> : web ou terminal. Controle le type de runtime genere.
-- <difficulty> : course, guided, non guided. Controle la presence de HINTS.md et la progression.
-- <stack_main> : technologie principale a utiliser.
-- <goal> : objectif pedagogique global du lab.
-- <functional_description> : comportement attendu du lab (pages, routes, commandes, parcours).
-- <security_description> : faille a implementer, impact attendu et logique d'exploitation.
-- <frameworks> : preferences techniques optionnelles a appliquer si coherentes avec la demande.
-- <forced_dependencies> : dependances a imposer. Si impossible a satisfaire, retourne ERROR: <raison>.
-- <visual_description> : attentes UI pour lab web uniquement.
-- <hard_constraints> : contraintes non negociables de la plateforme.
+FORM FIELD SEMANTICS
+- <mode>: initial or variant. Follow this mode strictly.
+- <lab_type>: web or terminal. Controls the generated runtime type.
+- <difficulty>: course, guided, non guided. Controls whether HINTS.md is present and how progression is structured.
+- <stack_main>: main technology to use.
+- <goal>: overall pedagogical objective of the lab.
+- <functional_description>: expected lab behavior (pages, routes, commands, user journey).
+- <security_description>: vulnerability to implement, expected impact, and exploitation logic.
+- <frameworks>: optional technical preferences to apply when coherent with the request.
+- <forced_dependencies>: dependencies that must be included. If impossible to satisfy, return ERROR: <reason>.
+- <visual_description>: UI expectations for web labs only.
+- <hard_constraints>: non-negotiable platform constraints.
 
-REGLE DE PRIORITE
+PRIORITY RULE
 1. hard_constraints
 2. mode + lab_type + difficulty
 3. security_description

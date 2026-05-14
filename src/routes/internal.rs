@@ -133,19 +133,19 @@ fn extract_payload_request_id(payload: &serde_json::Value) -> Option<Uuid> {
 
 fn build_pedagogical_prompt(payload: &serde_json::Value) -> String {
     format!(
-        r#"Tu es un assistant pedagogique pour des professeurs et createurs de labs terminal.
+        r#"You are a pedagogical assistant for teachers and terminal lab creators.
 
-Tu dois produire uniquement un JSON valide. Aucun markdown, aucun texte autour.
+You must produce only valid JSON. No markdown, no surrounding text.
 
-Contraintes absolues :
-- ne note jamais un eleve ;
-- ne decide jamais officiellement de la reussite ou de l'echec ;
-- ne classe jamais les eleves ;
-- n'accuse jamais de triche ;
-- n'invente aucun fait absent du payload ;
-- distingue les faits observes des hypotheses pedagogiques.
+Absolute constraints:
+- never grade a student;
+- never officially decide success or failure;
+- never rank students;
+- never accuse cheating;
+- never invent facts absent from the payload;
+- distinguish observed facts from pedagogical hypotheses.
 
-Schema attendu pour un rapport individuel :
+Expected schema for an individual report:
 {{
   "report_type": "individual_student_activity_report",
   "summary": "",
@@ -167,7 +167,7 @@ Schema attendu pour un rapport individuel :
   "recommendations_for_teacher": []
 }}
 
-Schema attendu pour un rapport groupe :
+Expected schema for a group report:
 {{
   "report_type": "group_activity_report",
   "summary": "",
@@ -177,7 +177,7 @@ Schema attendu pour un rapport groupe :
   "recommendations_for_teacher": []
 }}
 
-Payload factuel :
+Factual payload:
 {}"#,
         payload
     )
@@ -185,17 +185,17 @@ Payload factuel :
 
 fn build_retry_prompt(payload: &serde_json::Value, validation_error: &str, raw: &str) -> String {
     format!(
-        r#"La sortie precedente est invalide.
+        r#"The previous output is invalid.
 
-Erreur de validation : {validation_error}
+Validation error: {validation_error}
 
-Corrige uniquement le format JSON en respectant le schema attendu. Ne change pas les faits fournis.
-Reponds uniquement avec un JSON valide.
+Fix only the JSON format while following the expected schema. Do not change the provided facts.
+Respond only with valid JSON.
 
-Sortie precedente :
+Previous output:
 {raw}
 
-Payload factuel :
+Factual payload:
 {payload}"#
     )
 }
@@ -271,17 +271,17 @@ fn local_structured_report(payload: &serde_json::Value) -> serde_json::Value {
         let metrics = payload.get("group_activity").cloned().unwrap_or_default();
         return serde_json::json!({
             "report_type": "group_activity_report",
-            "summary": "Synthese locale basee sur les metriques backend disponibles.",
+            "summary": "Local summary based on the available backend metrics.",
             "group_observations": [
-                format!("Etudiants observes: {}", metrics.get("students_count").and_then(|v| v.as_i64()).unwrap_or(0)),
-                format!("Sessions avec terminal: {}", metrics.get("terminal_sessions_count").and_then(|v| v.as_i64()).unwrap_or(0))
+                format!("Observed students: {}", metrics.get("students_count").and_then(|v| v.as_i64()).unwrap_or(0)),
+                format!("Sessions with terminal activity: {}", metrics.get("terminal_sessions_count").and_then(|v| v.as_i64()).unwrap_or(0))
             ],
             "difficulty_signals": metrics.get("common_blockers").cloned().unwrap_or_else(|| serde_json::json!([])),
             "possible_lab_improvements": [
-                "Verifier les etapes qui concentrent les echecs ou les repetitions."
+                "Check the steps that concentrate failures or repeated attempts."
             ],
             "recommendations_for_teacher": [
-                "Utiliser les metriques factuelles pour cibler l'accompagnement en classe."
+                "Use factual metrics to target classroom support."
             ]
         });
     }
@@ -303,7 +303,7 @@ fn local_structured_report(payload: &serde_json::Value) -> serde_json::Value {
 
     serde_json::json!({
         "report_type": "individual_student_activity_report",
-        "summary": "Synthese locale basee sur les metriques backend disponibles.",
+        "summary": "Local summary based on the available backend metrics.",
         "observed_activity": {
             "started_lab": metrics.get("started_lab").and_then(|v| v.as_bool()).unwrap_or(false),
             "completed_lab": metrics.get("completed_lab").and_then(|v| v.as_bool()).unwrap_or(false),
@@ -314,7 +314,7 @@ fn local_structured_report(payload: &serde_json::Value) -> serde_json::Value {
         "effort_analysis": {
             "level": level,
             "evidence": [
-                format!("Nombre de commandes collectees: {commands_count}")
+                format!("Collected command count: {commands_count}")
             ]
         },
         "progression_analysis": {
@@ -323,7 +323,7 @@ fn local_structured_report(payload: &serde_json::Value) -> serde_json::Value {
             "blockers": metrics.get("possible_blockers").cloned().unwrap_or_else(|| serde_json::json!([]))
         },
         "recommendations_for_teacher": [
-            "S'appuyer sur les commandes significatives et les blocages probables avant d'intervenir."
+            "Use significant commands and likely blockers before intervening."
         ]
     })
 }

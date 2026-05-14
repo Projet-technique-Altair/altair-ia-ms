@@ -1,4 +1,4 @@
-use axum::{extract::Path, extract::State, http::HeaderMap, Json};
+use axum::{Json, extract::Path, extract::State, http::HeaderMap};
 use uuid::Uuid;
 
 use crate::{
@@ -21,41 +21,35 @@ fn is_run_failure_retryable(error_code: Option<&str>) -> bool {
     )
 }
 
-const GENERIC_RUN_ERROR_MESSAGE: &str = "Une erreur est survenue.";
+const GENERIC_RUN_ERROR_MESSAGE: &str = "An error occurred.";
 
 fn public_error_message(error_code: Option<&str>) -> Option<String> {
     let code = error_code?;
     let message = match code {
-        "ENQUEUE_FAILED" => "Une erreur s'est produite, veuillez reessayer plus tard.",
-        "SOURCE_DOWNLOAD_FAILED" => "Impossible de recuperer les fichiers source. Veuillez reessayer.",
+        "ENQUEUE_FAILED" => "An error occurred. Please try again later.",
+        "SOURCE_DOWNLOAD_FAILED" => "Unable to retrieve the source files. Please try again.",
         "SOURCE_PARSE_FAILED" => {
-            "Les fichiers fournis sont invalides ou illisibles. Verifiez leur format puis reessayez."
+            "The provided files are invalid or unreadable. Check their format and try again."
         }
-        "UNSATISFIABLE_REQUEST" => {
-            "La demande ne peut pas etre satisfaite avec les contraintes fournies."
-        }
+        "UNSATISFIABLE_REQUEST" => "The request cannot be satisfied with the provided constraints.",
         "MODE_APPLICATION_FAILED"
         | "RESULT_BUILD_FAILED"
         | "OUTPUT_PARSE_FAILED"
         | "MODEL_CALL_FAILED"
         | "PRE_DISPATCH_FAILED"
         | "PROMPT_BUILD_FAILED"
-        | "MODEL_AUTH_FAILED" => {
-            GENERIC_RUN_ERROR_MESSAGE
-        }
+        | "MODEL_AUTH_FAILED" => GENERIC_RUN_ERROR_MESSAGE,
         "PROMPT_TOO_LARGE" => {
-            "La demande est trop volumineuse pour etre traitee. Reduisez le contexte puis reessayez."
+            "The request is too large to process. Reduce the context and try again."
         }
         "VALIDATION_FAILED" => GENERIC_RUN_ERROR_MESSAGE,
         "AI_TEMPORARILY_UNAVAILABLE" => {
-            "Le service IA est temporairement indisponible. Veuillez reessayer plus tard."
+            "The AI service is temporarily unavailable. Please try again later."
         }
         "MODEL_UNAVAILABLE" | "MODEL_UNAVAILABLE_RETRY" => GENERIC_RUN_ERROR_MESSAGE,
-        "RESULT_UPLOAD_FAILED" => {
-            "Le resultat n'a pas pu etre enregistre. Veuillez reessayer."
-        }
+        "RESULT_UPLOAD_FAILED" => "The result could not be saved. Please try again.",
         "TIMEOUT" => GENERIC_RUN_ERROR_MESSAGE,
-        "RUN_NOT_FOUND" => "Run introuvable.",
+        "RUN_NOT_FOUND" => "Run not found.",
         _ => GENERIC_RUN_ERROR_MESSAGE,
     };
     Some(message.to_string())
@@ -80,9 +74,7 @@ pub async fn get_run_status(
                 error = %error,
                 "failed to fetch run status"
             );
-            AppError::Internal(
-                "une erreur s'est produite veuillez re essayer plus tard".to_string(),
-            )
+            AppError::Internal("an internal error occurred, please try again later".to_string())
         })?
         .ok_or_else(|| AppError::NotFound("run not found".to_string()))?;
 
@@ -134,9 +126,7 @@ pub async fn presign_download(
                 error = %error,
                 "failed to fetch run for download"
             );
-            AppError::Internal(
-                "une erreur s'est produite veuillez re essayer plus tard".to_string(),
-            )
+            AppError::Internal("an internal error occurred, please try again later".to_string())
         })?
         .ok_or_else(|| AppError::NotFound("run not found".to_string()))?;
 

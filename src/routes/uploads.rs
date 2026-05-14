@@ -1,4 +1,4 @@
-use axum::{extract::State, http::HeaderMap, Json};
+use axum::{Json, extract::State, http::HeaderMap};
 use uuid::Uuid;
 
 use crate::{
@@ -39,15 +39,6 @@ pub async fn presign_uploads(
                 "unsupported file: {}",
                 file.name
             )));
-        }
-
-        if let Some(content_type) = &file.content_type {
-            if !is_allowed_content_type(content_type) {
-                return Err(AppError::UnsupportedFileType(format!(
-                    "unsupported content_type for {}: {}",
-                    file.name, content_type
-                )));
-            }
         }
 
         let file_size = file.size_bytes.unwrap_or(0);
@@ -93,9 +84,7 @@ pub async fn presign_uploads(
                 error = %error,
                 "failed to persist run upload references"
             );
-            AppError::Internal(
-                "une erreur s'est produite veuillez re essayer plus tard".to_string(),
-            )
+            AppError::Internal("an internal error occurred, please try again later".to_string())
         })?;
 
     let data = PresignUploadResponse {
@@ -106,38 +95,18 @@ pub async fn presign_uploads(
     Ok(Json(ApiResponse::success(data, Uuid::new_v4().to_string())))
 }
 
-fn is_allowed_content_type(ct: &str) -> bool {
-    let lower = ct.to_ascii_lowercase();
-    lower == "application/zip"
-        || lower.starts_with("text/")
-        || lower == "application/json"
-        || lower == "application/javascript"
-        || lower == "text/javascript"
-        || lower == "application/x-javascript"
-        || lower == "application/x-yaml"
-        || lower == "application/yaml"
-}
-
 #[cfg(test)]
 mod tests {
-    use super::is_allowed_content_type;
     use crate::services::file_policy::is_allowed_upload_name;
 
     #[test]
     fn upload_name_allowlist() {
-        assert!(is_allowed_upload_name("lab.zip"));
+        assert!(!is_allowed_upload_name("lab.zip"));
         assert!(is_allowed_upload_name("README.md"));
-        assert!(is_allowed_upload_name("app/main.py"));
+        assert!(!is_allowed_upload_name("app/main.py"));
+        assert!(is_allowed_upload_name("app/main.js"));
+        assert!(is_allowed_upload_name("app/start.sh"));
         assert!(!is_allowed_upload_name("bin/malware.exe"));
-    }
-
-    #[test]
-    fn content_type_allowlist() {
-        assert!(is_allowed_content_type("application/zip"));
-        assert!(is_allowed_content_type("text/plain"));
-        assert!(is_allowed_content_type("application/javascript"));
-        assert!(is_allowed_content_type("text/javascript"));
-        assert!(is_allowed_content_type("application/x-javascript"));
-        assert!(!is_allowed_content_type("application/x-msdownload"));
+        assert!(!is_allowed_upload_name("bin/malware.exe.txt"));
     }
 }
