@@ -1,4 +1,4 @@
-const ALLOWED_EXTENSIONS: [&str; 8] = [".txt", ".md", ".json", ".js", ".html", ".css", ".sh", ".c"];
+const ALLOWED_EXTENSIONS: [&str; 9] = [".txt", ".md", ".json", ".js", ".html", ".css", ".sh", ".c", ".py"];
 
 const BLOCKED_EXTENSIONS: [&str; 19] = [
     "exe", "dll", "so", "dylib", "bat", "cmd", "ps1", "msi", "bin", "elf", "jar", "class", "pyc",
@@ -53,6 +53,7 @@ mod tests {
         assert!(is_allowed_upload_name("README.md"));
         assert!(is_allowed_upload_name("assets/app.min.js"));
         assert!(is_allowed_upload_name("src/runner.c"));
+        assert!(is_allowed_upload_name("src/script.py"));
     }
 
     #[test]
