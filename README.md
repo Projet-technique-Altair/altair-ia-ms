@@ -5,18 +5,18 @@ Async IA microservice skeleton for Altair labs.
 ## Endpoints (MVP)
 - `POST /api/ia/labs/uploads/presign`
 - `POST /api/ia/labs/execute/structured`
+- `POST /api/ia/labs/qualify/structured`
 - `GET /api/ia/labs/runs/{id}`
 - `POST /api/ia/labs/runs/{id}/download/presign`
-- `POST /api/ia/labs/advise`
 - `POST /internal/ia/runs/{id}/process`
+- `POST /internal/ia/pedagogical-analysis`
 
 ## Notes
 - Runtime mode is explicit via `IA_RUNTIME_MODE`:
   - `local`
   - `pseudo_prod`
 - Run state backend:
-  - PostgreSQL when `DATABASE_URL` is set (Neon-compatible)
-  - in-memory fallback when `DATABASE_URL` is not set
+  - PostgreSQL via `DATABASE_URL`
 - Result artifacts are stored under `results/{request_id}/lab-result.zip`
   (`LOCAL_STORAGE_DIR` in mock mode, GCS in `iam_signblob` mode).
 - Upload objects are expected under `uploads/{request_id}/...`.
@@ -108,6 +108,8 @@ With the default local profile, source files and generated zips are stored under
 The frontend receives local signed URLs under `/local-storage/...`, so a full local
 flow can run without GCS: upload source files, generate a lab, then download the
 result zip from `altair-ia-ms`.
+
+The local-storage HTTP routes are only enabled while `GCS_SIGNED_URL_MODE=mock`.
 
 ### Pseudo-prod profile
 1. `cp .env.pseudo-prod.example .env`

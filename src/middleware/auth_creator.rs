@@ -11,6 +11,7 @@ pub fn extract_auth_context(
     headers: &HeaderMap,
     require_creator_role: bool,
 ) -> Result<AuthContext, AppError> {
+    ensure_gateway_origin(headers)?;
     let user_id = headers
         .get("x-altair-user-id")
         .and_then(|v| v.to_str().ok())
@@ -55,6 +56,22 @@ pub fn extract_auth_context(
     }
 
     Ok(AuthContext { user_id })
+}
+
+fn ensure_gateway_origin(headers: &HeaderMap) -> Result<(), AppError> {
+    let Ok(expected) = std::env::var("GATEWAY_SHARED_TOKEN") else {
+        return Ok(());
+    };
+    let provided = headers
+        .get("x-altair-gateway-token")
+        .and_then(|value| value.to_str().ok());
+    if provided == Some(expected.as_str()) {
+        Ok(())
+    } else {
+        Err(AppError::Unauthorized(
+            "untrusted gateway origin".to_string(),
+        ))
+    }
 }
 
 #[cfg(test)]
