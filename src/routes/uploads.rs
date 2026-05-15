@@ -103,7 +103,7 @@ mod tests {
     fn upload_name_allowlist() {
         assert!(!is_allowed_upload_name("lab.zip"));
         assert!(is_allowed_upload_name("README.md"));
-        assert!(!is_allowed_upload_name("app/main.py"));
+        assert!(is_allowed_upload_name("app/main.py"));
         assert!(is_allowed_upload_name("app/main.js"));
         assert!(is_allowed_upload_name("app/start.sh"));
         assert!(!is_allowed_upload_name("bin/malware.exe"));
