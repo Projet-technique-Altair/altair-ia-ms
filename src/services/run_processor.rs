@@ -499,10 +499,7 @@ impl RunProcessor {
                 files
             }
             Err(parse_error) => {
-                let failure_message = format!(
-                    "{parse_error}. Raw(first500): {}",
-                    truncate_for_log(&model_output.raw_response, 500)
-                );
+                let failure_message = parse_error.to_string();
 
                 log_lab_generation_failure(
                     request_id,
@@ -523,7 +520,6 @@ impl RunProcessor {
                     None,
                     None,
                     &failure_message,
-                    &model_output.raw_response,
                     false,
                 );
 
@@ -602,10 +598,8 @@ impl RunProcessor {
                         files
                     }
                     Err(final_parse_error) => {
-                        let final_message = format!(
-                            "parse failed after one repair retry: {final_parse_error}; raw_response={}",
-                            truncate_for_log(&model_output.raw_response, 4000)
-                        );
+                        let final_message =
+                            format!("parse failed after one repair retry: {final_parse_error}");
 
                         log_lab_generation_failure(
                             request_id,
@@ -626,7 +620,6 @@ impl RunProcessor {
                             None,
                             None,
                             &final_message,
-                            &model_output.raw_response,
                             true,
                         );
 
@@ -642,10 +635,8 @@ impl RunProcessor {
 
         if let Err(validation_error) = validate_generated_lab(lab_type, difficulty, &files) {
             if generation_attempt >= LAB_GENERATION_REPAIR_ATTEMPT {
-                let final_message = format!(
-                    "validation failed after one repair retry: {validation_error}; raw_response={}",
-                    truncate_for_log(&model_output.raw_response, 4000)
-                );
+                let final_message =
+                    format!("validation failed after one repair retry: {validation_error}");
 
                 log_lab_generation_failure(
                     request_id,
@@ -666,7 +657,6 @@ impl RunProcessor {
                     Some(false),
                     Some(files.len()),
                     &final_message,
-                    &model_output.raw_response,
                     true,
                 );
 
@@ -752,10 +742,8 @@ impl RunProcessor {
                     files
                 }
                 Err(parse_error) => {
-                    let final_message = format!(
-                        "validation repair retry parse failed: {parse_error}; raw_response={}",
-                        truncate_for_log(&model_output.raw_response, 4000)
-                    );
+                    let final_message =
+                        format!("validation repair retry parse failed: {parse_error}");
 
                     log_lab_generation_failure(
                         request_id,
@@ -776,7 +764,6 @@ impl RunProcessor {
                         None,
                         None,
                         &final_message,
-                        &model_output.raw_response,
                         true,
                     );
 
@@ -789,10 +776,8 @@ impl RunProcessor {
             };
 
             if let Err(final_error) = validate_generated_lab(lab_type, difficulty, &files) {
-                let final_message = format!(
-                    "validation failed after one repair retry: {final_error}; raw_response={}",
-                    truncate_for_log(&model_output.raw_response, 4000)
-                );
+                let final_message =
+                    format!("validation failed after one repair retry: {final_error}");
 
                 log_lab_generation_failure(
                     request_id,
@@ -813,7 +798,6 @@ impl RunProcessor {
                     Some(false),
                     Some(files.len()),
                     &final_message,
-                    &model_output.raw_response,
                     true,
                 );
 
@@ -1081,7 +1065,6 @@ fn log_lab_generation_failure(
     validation_success: Option<bool>,
     files_generated: Option<usize>,
     error: &str,
-    raw_response: &str,
     final_failure: bool,
 ) {
     if final_failure {
@@ -1090,7 +1073,6 @@ fn log_lab_generation_failure(
             stage,
             attempt,
             error = %error,
-            raw_response = %truncate_for_log(raw_response, 4000),
             "lab generation failed after one repair retry"
         );
     } else {
@@ -1099,7 +1081,6 @@ fn log_lab_generation_failure(
             stage,
             attempt,
             error = %error,
-            raw_response = %truncate_for_log(raw_response, 1000),
             "lab generation failed before repair retry"
         );
     }

@@ -21,6 +21,7 @@ pub async fn put_local_object(
     Query(query): Query<MockSignedQuery>,
     body: Bytes,
 ) -> Result<StatusCode, AppError> {
+    ensure_mock_storage_mode(&state)?;
     validate_mock_signed_query(&query, "PUT")?;
     state
         .storage
@@ -34,6 +35,7 @@ pub async fn get_local_object(
     Path(object_key): Path<String>,
     Query(query): Query<MockSignedQuery>,
 ) -> Result<Response, AppError> {
+    ensure_mock_storage_mode(&state)?;
     validate_mock_signed_query(&query, "GET")?;
     let bytes = state.storage.download_object_bytes(&object_key).await?;
     let content_type = if object_key.ends_with(".zip") {
@@ -55,6 +57,14 @@ pub async fn get_local_object(
     }
 
     Ok((headers, bytes).into_response())
+}
+
+fn ensure_mock_storage_mode(state: &AppState) -> Result<(), AppError> {
+    if state.storage.is_mock_mode() {
+        Ok(())
+    } else {
+        Err(AppError::NotFound("local storage is disabled".to_string()))
+    }
 }
 
 fn validate_mock_signed_query(

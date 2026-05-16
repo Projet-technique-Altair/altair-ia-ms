@@ -6,8 +6,8 @@ use crate::services::{
     anthropic::AnthropicService,
     gemini::GeminiService,
     llm::{
-        LabGenerationInput, LabGenerationOutput, LlmError, LlmErrorKind, TokenCountEstimate,
-        truncate_for_log,
+        truncate_for_log, LabGenerationInput, LabGenerationOutput, LlmError, LlmErrorKind,
+        TokenCountEstimate,
     },
     llm_config::{
         CLAUDE_MAX_ATTEMPTS_DEFAULT, GEMINI_MAX_ATTEMPTS_DEFAULT,
@@ -646,6 +646,7 @@ fn log_llm_attempt_success(
     );
 }
 
+#[allow(clippy::too_many_arguments)]
 fn log_llm_attempt_failure(
     provider: &'static str,
     attempt: u8,

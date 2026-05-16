@@ -110,6 +110,10 @@ impl StorageService {
         self.signed_url("GET", object_key).await
     }
 
+    pub fn is_mock_mode(&self) -> bool {
+        matches!(self.signed_mode, SignedUrlMode::Mock)
+    }
+
     pub fn result_object_key(&self, request_id: Uuid) -> String {
         format!("results/{request_id}/lab-result.zip")
     }
