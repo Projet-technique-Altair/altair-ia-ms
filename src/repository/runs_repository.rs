@@ -407,7 +407,6 @@ impl RunsRepository {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

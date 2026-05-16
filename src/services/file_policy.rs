@@ -1,4 +1,6 @@
-const ALLOWED_EXTENSIONS: [&str; 9] = [".txt", ".md", ".json", ".js", ".html", ".css", ".sh", ".c", ".py"];
+const ALLOWED_EXTENSIONS: [&str; 9] = [
+    ".txt", ".md", ".json", ".js", ".html", ".css", ".sh", ".c", ".py",
+];
 
 const BLOCKED_EXTENSIONS: [&str; 19] = [
     "exe", "dll", "so", "dylib", "bat", "cmd", "ps1", "msi", "bin", "elf", "jar", "class", "pyc",

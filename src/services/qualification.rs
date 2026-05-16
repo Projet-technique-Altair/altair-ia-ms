@@ -316,7 +316,8 @@ fn local_qualification(lab_request_xml: &str) -> QualificationResponse {
         ),
     ]
     .into_iter()
-    .filter_map(|(needle, message)| lowered.contains(needle).then(|| message.to_string()))
+    .filter(|(needle, _)| lowered.contains(needle))
+    .map(|(_, message)| message.to_string())
     .collect::<Vec<_>>();
 
     if !blockers.is_empty() {
